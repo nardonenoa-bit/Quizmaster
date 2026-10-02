@@ -1,0 +1,1393 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Coach Trail Noa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --bg:#f7f7f8; --card:#fff; --ink:#1f2328; --ink2:#3d434b; --muted:#6b7280; --line:#e9e9ec; --line2:#f1f1f3;
+  --orange:#FC4C02; --orange-d:#d93f00; --orange-s:#fff1ea; --green:#16a34a; --blue:#2563eb; --red:#dc2626; --amber:#d97706;
+  --r:14px; --shadow:0 1px 2px rgba(16,24,40,.04),0 6px 20px rgba(16,24,40,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--orange)}
+.num{font-variant-numeric:tabular-nums}
+
+/* Top bar */
+.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1240px;margin:0 auto;padding:10px 16px 0;display:flex;flex-direction:column;gap:8px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:34px;height:34px;border-radius:10px;background:var(--orange);display:grid;place-items:center;color:#fff;flex:none}
+.brand h1{font-size:17px;margin:0;font-weight:800;letter-spacing:-.01em}
+.brand .sub{color:var(--muted);font-size:12.5px}
+.brand .sp{flex:1}
+.sync{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:#cbd5e1;display:inline-block}
+.dot.ok{background:var(--green)} .dot.live{background:var(--orange);box-shadow:0 0 0 3px rgba(252,76,2,.18)}
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin:0 -4px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{border:0;background:none;padding:10px 12px 12px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;border-bottom:2.5px solid transparent;font-size:14px}
+.tab:hover{color:var(--ink)}
+.tab.on{color:var(--orange);border-bottom-color:var(--orange)}
+
+main{max-width:1240px;margin:0 auto;padding:18px 16px 60px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.span2{grid-column:span 2}
+@media (max-width:560px){.brand .sub{display:none}.sync .lbl{display:none}}
+@media (max-width:980px){.g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.span2{grid-column:auto}}
+@media (max-width:680px){.g2,.g3,.g4{grid-template-columns:minmax(0,1fr)}}
+
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;min-width:0}
+.card h2{font-size:15px;margin:0 0 12px;font-weight:700;display:flex;align-items:center;gap:8px}
+.card h2 .r{margin-left:auto;font-weight:500;font-size:12.5px;color:var(--muted)}
+.card h3{font-size:13px;margin:14px 0 8px;font-weight:700;color:var(--ink2)}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sp{flex:1}
+
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;line-height:1.3;white-space:nowrap}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:600;background:var(--line2);color:var(--ink2)}
+.pill.o{background:var(--orange-s);color:var(--orange-d)}
+.pill.g{background:#e8f7ee;color:#11733a}
+.pill.r{background:#fdecec;color:#b42318}
+.pill.a{background:#fef3e2;color:#a45a06}
+
+.btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:#d4d4d8}
+.btn.pri{background:var(--orange);border-color:var(--orange);color:#fff}
+.btn.pri:hover{background:var(--orange-d)}
+.btn.sm{padding:5px 9px;font-size:12.5px;border-radius:8px}
+.btn:disabled{opacity:.5;cursor:default}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-weight:600;cursor:pointer;font-size:13px;white-space:nowrap}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+
+/* KPI + countdown */
+.kpi .lab{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.kpi .val{font-size:26px;font-weight:800;letter-spacing:-.02em;margin-top:4px}
+.kpi .val small{font-size:14px;font-weight:600;color:var(--muted)}
+.bar{height:7px;border-radius:99px;background:var(--line2);overflow:hidden;margin-top:10px}
+.bar>i{display:block;height:100%;border-radius:99px;background:var(--orange)}
+.cd{position:relative;overflow:hidden;color:#fff;background:linear-gradient(135deg,#FC4C02,#ff7a3d)}
+.cd.blue{background:linear-gradient(135deg,#1e3a8a,#2563eb)}
+.cd .big{font-size:40px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.cd .lab{opacity:.9;font-weight:600;font-size:12.5px}
+.cd .ev{font-size:16px;font-weight:700;margin-top:8px}
+.cd .meta{font-size:12.5px;opacity:.92;margin-top:2px}
+.cd svg.mnt{position:absolute;right:-6px;bottom:-4px;opacity:.18}
+
+/* Week circles */
+.circles{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center}
+.circ{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11.5px}
+.circ .c{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:12px;border:3px solid;background:#fff}
+.circ.today .c{box-shadow:0 0 0 4px rgba(252,76,2,.2)}
+.circ .d{font-weight:700;color:var(--ink2)}
+@media (max-width:420px){.circ .c{width:36px;height:36px;font-size:11px}}
+
+.coach{background:var(--orange-s);border-left:4px solid var(--orange);border-radius:10px;padding:12px 14px;font-size:14px;color:#5a2a10}
+
+/* Feed */
+.feed{display:flex;flex-direction:column}
+.act{display:flex;gap:12px;padding:10px 0;border-top:1px solid var(--line2);align-items:center}
+.act:first-child{border-top:0}
+.act .ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:none;font-weight:700;font-size:12px}
+.act .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.act .st{display:flex;gap:12px;font-size:12.5px;color:var(--muted);flex-wrap:wrap}
+.act .st b{color:var(--ink);font-weight:600}
+
+/* Shoes */
+.shoe{padding:10px 0;border-top:1px solid var(--line2)}
+.shoe:first-child{border-top:0}
+.shoe .bar{margin-top:6px}
+
+/* Plan */
+.wkhead{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.wkhead .tt{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.stats{display:flex;gap:18px;flex-wrap:wrap}
+.stat .l{font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.stat .v{font-size:18px;font-weight:700}
+.sess{display:grid;grid-template-columns:62px 118px minmax(0,1fr) 92px 92px 34px;gap:10px;align-items:center;padding:11px 10px;border-radius:12px;border:1px solid var(--line2);background:#fff;margin-top:8px}
+.sess.done{background:#fbfdfb}
+.sess.today{border-color:var(--orange);box-shadow:0 0 0 3px rgba(252,76,2,.08)}
+.sess .day b{display:block;font-size:14px}
+.sess .day span{font-size:12px;color:var(--muted)}
+.sess .ttl{font-weight:600}
+.sess .meta{font-size:12.5px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;margin-top:2px}
+.sess .note{font-size:12.5px;color:var(--ink2);margin-top:3px}
+.sess .k{text-align:right}
+.sess .k b{display:block;font-size:15px}
+.sess .k span{font-size:11.5px;color:var(--muted)}
+.chk{width:26px;height:26px;border-radius:50%;border:2px solid #d4d4d8;display:grid;place-items:center;cursor:pointer;background:#fff;padding:0}
+.chk.on{background:var(--green);border-color:var(--green);color:#fff}
+.sess.drag{opacity:.4}
+.sess.over{border-color:var(--orange);border-style:dashed}
+.handle{cursor:grab;color:#9ca3af;user-select:none;display:flex;flex-direction:column;align-items:center;gap:2px}
+.sess input,.sess select,.sess textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:5px 7px;background:#fff;font-size:13px}
+.sess textarea{resize:vertical;min-height:34px}
+.sess.edit{grid-template-columns:24px 56px 118px minmax(0,1fr) 150px 150px 34px}
+.mini{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.mini label{font-size:10.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+@media (max-width:820px){
+  .sess{grid-template-columns:48px minmax(0,1fr) minmax(0,1fr) 30px;grid-template-areas:"d t t c" "d y y y" "d k r r";row-gap:6px}
+  .sess .day{grid-area:d;align-self:start} .sess .typ{grid-area:y} .sess .body{grid-area:t} .sess .chkw{grid-area:c;align-self:start}
+  .sess .kp{grid-area:k;text-align:left} .sess .kr{grid-area:r;text-align:left}
+  .sess.edit{grid-template-columns:minmax(0,1fr);grid-template-areas:none}
+  .sess.edit>*{grid-area:auto !important}
+}
+
+/* Calendar */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr)) 92px;gap:4px}
+.cal .h{font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;padding:4px 6px}
+.cell{min-height:86px;border-radius:10px;background:#fff;border:1px solid var(--line2);padding:6px;display:flex;flex-direction:column;gap:4px;font-size:12px;cursor:pointer}
+.cell.out{opacity:.38}
+.cell.today{border-color:var(--orange);box-shadow:0 0 0 2px rgba(252,76,2,.15)}
+.cell .dn{font-weight:700;font-size:12px;color:var(--ink2);display:flex;justify-content:space-between}
+.cell .tb{border-radius:6px;padding:2px 6px;font-weight:600;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cell .rk{font-size:11.5px;color:var(--muted)}
+.cell.race{background:linear-gradient(180deg,#fff4ee,#fff)}
+.wtot{border-radius:10px;background:var(--line2);padding:6px 8px;font-size:12px;display:flex;flex-direction:column;justify-content:center;gap:2px}
+.wtot b{font-size:13px}
+.legend{display:flex;gap:6px;flex-wrap:wrap}
+@media (max-width:760px){
+  .cal{grid-template-columns:repeat(7,minmax(0,1fr))}
+  .wtot{grid-column:1/-1;flex-direction:row;gap:12px;justify-content:flex-start;padding:4px 8px}
+  .cell{min-height:58px;padding:4px}
+  .cell .tb{font-size:10px;padding:1px 3px}
+  .cell .rk{display:none}
+}
+
+/* Tables */
+.tw{overflow-x:auto;margin:0 -4px;padding:0 4px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700;text-align:left;padding:8px;border-bottom:1px solid var(--line)}
+td{padding:9px 8px;border-bottom:1px solid var(--line2);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right}
+
+/* Charts */
+.chart{width:100%;height:auto;display:block}
+.tip{position:fixed;z-index:50;pointer-events:none;background:#111827;color:#fff;font-size:12px;padding:7px 9px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.2);opacity:0;transition:opacity .08s;max-width:240px}
+.tip b{font-weight:700}
+.lg{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+/* Zones */
+.zrow{display:grid;grid-template-columns:44px 130px minmax(0,1fr) 92px;gap:10px;align-items:center;padding:7px 0}
+.zbar{height:24px;border-radius:7px;display:flex;align-items:center;padding:0 8px;color:#fff;font-weight:700;font-size:12px}
+@media (max-width:560px){.zrow{grid-template-columns:40px minmax(0,1fr) 80px}.zrow .zl{display:none}}
+
+/* Chat */
+.chat{display:flex;flex-direction:column;height:min(72vh,760px)}
+.msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:4px 2px 12px}
+.msg{max-width:86%;padding:10px 13px;border-radius:14px;white-space:pre-wrap;word-wrap:break-word}
+.msg.u{align-self:flex-end;background:var(--orange);color:#fff;border-bottom-right-radius:4px}
+.msg.a{align-self:flex-start;background:var(--line2);border-bottom-left-radius:4px}
+.msg.a h4{margin:6px 0 2px;font-size:14px}
+.msg .tools{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
+.msg.err{background:#fdecec;color:#b42318}
+.compose{display:flex;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.compose textarea{flex:1;border:1px solid var(--line);border-radius:12px;padding:10px 12px;resize:none;min-height:46px;max-height:160px}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.field label{font-size:12px;font-weight:600;color:var(--ink2)}
+.field input,.field select{border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:#fff}
+.inp{border:1px solid var(--line);border-radius:9px;padding:7px 9px;background:#fff;width:100%}
+
+.drop{border:2px dashed #d4d4d8;border-radius:12px;padding:16px;text-align:center;color:var(--muted);cursor:pointer}
+.drop:hover{border-color:var(--orange);color:var(--orange)}
+.warn{background:#fef3e2;border-radius:10px;padding:10px 12px;color:#7a4306;font-size:13px}
+.info{background:#eef4ff;border-radius:10px;padding:10px 12px;color:#1e3a8a;font-size:13px}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.hide{display:none !important}
+input[type=range]{accent-color:var(--orange);width:100%}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 19 9.5 8l3.5 6 2.5-4L21 19z" fill="#fff"/></svg>
+      </div>
+      <div>
+        <h1>Coach Trail</h1>
+        <div class="sub">Noa Nardone · Lissieu · FC max 192</div>
+      </div>
+      <div class="sp"></div>
+      <div class="sync" id="sync"></div>
+    </div>
+    <nav class="tabs" id="tabs"></nav>
+  </div>
+</header>
+<main id="app"></main>
+<div class="tip" id="tip"></div>
+<input type="file" id="gpxIn" accept=".gpx,application/gpx+xml,application/xml,text/xml" class="hide">
+
+<script>
+/* =========================================================
+   DONNÉES ATHLÈTE (brief + snapshot Strava du 2026-10-02)
+   ========================================================= */
+const ATHLETE = {
+  name:'Noa Nardone', weight:77, location:'Lissieu, Rhône, France', strava_id:125240214,
+  fc_max:192, est_5k:'20:13', foot_arch:'voûte haute', pronation:'pronateur (probable)',
+  shoe_size:{standard:'42.5', running:'44 (Saucony/Brooks)', la_sportiva:'45'}
+};
+
+const HR_ZONES = [
+  {z:'Z1',label:'Récupération',min:0,max:128,color:'#93c5fd'},
+  {z:'Z2',label:'Endurance',min:129,max:160,color:'#16a34a'},
+  {z:'Z3',label:'Tempo',min:161,max:175,color:'#eab308'},
+  {z:'Z4',label:'Seuil',min:176,max:191,color:'#FC4C02'},
+  {z:'Z5',label:'VO2max',min:192,max:200,color:'#dc2626'}
+];
+const PACES = [
+  {z:'EF',label:'Endurance fondamentale',pace:'5:39 — 6:30',bpm:'128 — 155',color:'#16a34a'},
+  {z:'AS21',label:'Allure semi',pace:'4:52 — 5:10',bpm:'155 — 170',color:'#eab308'},
+  {z:'AS10',label:'Allure 10 km',pace:'4:30 — 4:52',bpm:'170 — 180',color:'#f97316'},
+  {z:'AS5',label:'Allure 5 km',pace:'4:05 — 4:22',bpm:'180 — 190',color:'#FC4C02'},
+  {z:'VMA',label:'Vitesse max aérobie',pace:'3:40 — 3:55',bpm:'190+',color:'#dc2626'}
+];
+const PACE_ZONES = [
+  {z:'Z1',ms:'0 — 2.951',pace:'> 5:39'},{z:'Z2',ms:'2.951 — 3.429',pace:'4:52 — 5:39'},
+  {z:'Z3',ms:'3.429 — 3.819',pace:'4:22 — 4:52'},{z:'Z4',ms:'3.819 — 4.079',pace:'4:05 — 4:22'},
+  {z:'Z5',ms:'4.079 — 4.34',pace:'3:50 — 4:05'},{z:'Z6',ms:'4.34 +',pace:'< 3:50'}
+];
+
+const TYPES = {
+  EF:{label:'EF',color:'#16a34a',desc:'Endurance fondamentale'},
+  SL:{label:'Longue',color:'#2563eb',desc:'Sortie longue'},
+  FRAC:{label:'Frac',color:'#dc2626',desc:'Fractionné'},
+  COTES:{label:'Côtes',color:'#ea580c',desc:'Travail en côte'},
+  TEMPO:{label:'Tempo',color:'#FC4C02',desc:'Allure tempo'},
+  RECUP:{label:'Récup',color:'#93c5fd',desc:'Récupération'},
+  REPOS:{label:'Repos',color:'#9ca3af',desc:'Repos complet'},
+  COURSE:{label:'Course',color:'#FC4C02',desc:'Compétition'},
+  CROSS:{label:'Cross',color:'#0d9488',desc:'Cross-training'}
+};
+const TYPE_DEF = {
+  EF:{bpm:'129-155',pace:'5:39-6:30'}, SL:{bpm:'135-160',pace:'6:30-7:45 trail'},
+  FRAC:{bpm:'176-190',pace:'4:05-4:22'}, COTES:{bpm:'165-185',pace:'effort côte'},
+  TEMPO:{bpm:'155-170',pace:'4:52-5:10'}, RECUP:{bpm:'< 135',pace:'6:15-6:45'},
+  REPOS:{bpm:'—',pace:'—'}, CROSS:{bpm:'Z1-Z2',pace:'vélo 45 min'}, COURSE:{bpm:'—',pace:'—'}
+};
+
+/* Courses de référence et objectifs */
+const RACES = {
+  monteynard:{name:'Trail des Passerelles de Monteynard',short:'Monteynard',date:'2026-08-16',km:39,dplus:2122,time:'5h46',moving_s:20760,hr:153,hrmax:175,pace:'8:55',shoe:'Brooks Caldera 8',strava:'19279586386',
+    analysis:'Pacing excellent. Départ prudent. Aucune explosion musculaire contrairement à Paladru. Nouvelle référence de niveau.'},
+  paladru:{name:'Trail de Paladru',short:'Paladru',km:55,dplus:2000,time:'7h20',moving_s:26400,
+    analysis:'Départ trop ambitieux. Explosion musculaire au km 30. Leçon : ne plus partir trop vite.'},
+  tdlm:{name:'Trail de la Mine — 29 km des Maquisards',short:'Trail de la Mine',date:'2026-09-19',km:28.45,dplus:1506,time:'3h44:33',moving_s:13473,hr:149,hrmax:170,pace:'7:54',shoe:'La Sportiva Prodigio Pro',strava:'20243044911',re:200,
+    best:{'1 km':'4:02','1 mile':'6:58','5 km':'28:26','10 km':'67:37'},
+    analysis:'Couru en contrôle (FC 149 moy, jamais Z4). Finish en accélérant (km 27 : 4:59, km 28 : 5:28, FC 163-170). Avait encore du jus. Meilleur indicateur de forme actuelle.'},
+  drutel:{name:'Trail Jonathan Drutel — Virade de l\'espoir',short:'Trail Drutel',date:'2026-09-27',km:19.17,dplus:398,time:'1h34:07',moving_s:5647,hr:159,hrmax:172,pace:'4:55',shoe:'La Sportiva Prodigio Pro',strava:'20346897975',re:147,
+    target:'1h40 (5:00/km)', best:{'5 km':'23:29','10 km':'48:30','15 km':'1h12:59'},
+    analysis:'Objectif 1h40 battu de 6 min sur 19,2 km mesurés. Boucles quasi identiques, FC 159 moy, max 172 : jamais au-dessus de la zone cible 160-174. Allure 4:55/km tenue jusqu\'au bout.'},
+  utbv:{name:'Ultra Trail du Beaujolais Vert',short:'UTBV',date:'2026-10-10',km:42.53,dplus:2173,dminus:2173,altmin:317,altmax:827,loc:'Cublize, Beaujolais',
+    prediction:'5h10 — 5h25', nutrition:'4 gels (km 10, 17, 23, 28 caféiné) + flasque 500 ml isotonique'},
+  saintelyon:{name:'Sainté-Lyon',short:'Sainté-Lyon',date:'2026-11-28',start:'23h30',km:80,dplus:2200,prediction:'10h30 — 12h00',
+    notes:'Premier ultra nocturne. Terrain mixte sentier/bitume. Gestion du froid et de la fatigue nocturne.'}
+};
+
+const UTBV_SECTIONS = [
+  {from:0,to:5,up:203,down:89,note:'Mise en route. FC < 150.',pace:'7:30',fc:'< 150'},
+  {from:5,to:10,up:344,down:142,note:'Grosse montée vers 827 m. Marche active > 15 %. FC < 165.',pace:'9:30',fc:'< 165'},
+  {from:10,to:15,up:236,down:407,note:'Descente technique. Protéger les quadriceps. Gel 1.',pace:'7:00',fc:'< 155'},
+  {from:15,to:20,up:340,down:433,note:'Point bas 317 m. Ravitaillement. Gel 2 km 17.',pace:'8:00',fc:'< 160'},
+  {from:20,to:25,up:213,down:241,note:'Zone Paladru. Check musculaire. Gel 3 km 23.',pace:'8:30',fc:'< 160'},
+  {from:25,to:30,up:310,down:190,note:'2e montée. Phase critique mentale. Gel caféiné km 28.',pace:'9:00',fc:'< 165'},
+  {from:30,to:35,up:343,down:242,note:'Sommet 809 m. Le mur. Marche active systématique.',pace:'9:30',fc:'< 165'},
+  {from:35,to:40,up:163,down:253,note:'Descente finale. Relâcher. Accélérer si possible.',pace:'7:30',fc:'< 170'},
+  {from:40,to:42.53,up:21,down:176,note:'Finish. Tout lâcher.',pace:'6:30',fc:'libre'}
+];
+/* Profil schématique UTBV (points clés du brief). Remplacé par le GPX s'il est importé. */
+const UTBV_SCHEMA = [[0,450],[2.5,400],[5,564],[7,640],[9,827],[10,766],[12,700],[15,595],[17,317],[20,502],[22,560],[25,474],[28,620],[30,594],[33,809],[35,695],[38,640],[40,605],[42.53,450]];
+const UTBV_MARKERS = [{km:10,label:'Gel 1'},{km:17,label:'Gel 2 · ravito'},{km:23,label:'Gel 3'},{km:28,label:'Gel caféiné'}];
+
+/* Streams Strava (résolution 200 points, échantillonnage régulier en distance) */
+const STREAMS = {
+  tdlm:{km:28.45,
+    alt:[368,372,387,401,402,396,394,381,369,360,366,374,383,393,395,393,401,398,414,428,460,481,504,505,499,496,488,501,512,533,556,569,592,585,591,606,616,618,630,643,637,643,644,649,651,646,654,647,626,599,584,571,566,568,584,598,599,603,608,605,632,645,659,646,621,603,600,597,569,547,529,539,555,571,590,625,657,684,704,730,733,722,709,700,693,663,634,600,567,547,532,573,608,646,680,695,680,675,660,649,636,628,602,570,589,599,606,631,657,681,703,730,737,730,729,725,725,741,758,768,775,779,770,765,762,758,758,756,735,728,705,684,659,637,622,599,568,536,494,478,465,449,473,504,542,552,597,623,610,603,600,596,589,574,547,527,512,501,473,447,445,462,469,469,470,474,483,493,518,535,519,479,450,426,419,410,412,422,416,405,403,417,432,430,414,398,381,364,358,363,365,369,376,391,388,398,400,392,378,371],
+    t:[0,52,114,172,221,265,311,354,398,442,493,546,601,660,708,756,813,863,947,1017,1146,1251,1350,1418,1465,1511,1554,1626,1690,1790,1883,1956,2068,2131,2193,2272,2327,2384,2456,2531,2582,2635,2692,2753,2806,2852,2910,2967,3025,3082,3134,3191,3257,3316,3420,3505,3561,3609,3660,3708,3875,3944,4012,4066,4119,4167,4220,4279,4339,4391,4438,4507,4592,4686,4785,4921,5060,5166,5270,5384,5480,5532,5583,5632,5681,5738,5789,5849,5910,5961,6016,6193,6350,6512,6669,6766,6821,6872,6925,6975,7026,7076,7127,7183,7274,7331,7392,7514,7628,7739,7846,7968,8029,8084,8215,8272,8323,8406,8492,8560,8631,8689,8738,8785,8831,8885,8930,8976,9027,9075,9139,9196,9267,9327,9384,9451,9515,9585,9667,9730,9793,9853,9988,10130,10287,10367,10554,10695,10748,10795,10838,10959,11000,11042,11096,11141,11184,11227,11281,11340,11384,11480,11532,11576,11620,11667,11721,11783,11912,12004,12059,12113,12159,12204,12246,12291,12337,12401,12484,12520,12561,12638,12722,12770,12809,12848,12887,12929,12970,13016,13060,13106,13153,13206,13252,13299,13346,13383,13428,13477],
+    hr:[80,113,139,149,151,138,137,130,128,130,145,151,152,155,148,146,148,145,154,156,152,144,146,152,147,145,140,156,151,152,152,151,148,143,149,153,158,150,149,154,143,143,142,147,147,135,149,144,135,132,133,129,137,143,149,147,154,153,151,146,151,152,158,148,132,132,140,145,135,127,128,151,149,153,153,153,148,151,146,151,148,133,134,133,137,129,129,130,133,136,137,155,151,153,152,166,166,142,135,142,141,144,146,140,153,161,158,154,158,156,160,155,160,159,129,137,148,148,158,152,156,162,144,143,144,145,151,148,140,138,135,137,139,135,135,138,139,136,137,127,140,143,161,160,162,161,161,164,157,149,149,126,142,147,142,140,139,146,142,142,149,158,159,162,159,159,161,161,160,165,158,150,148,152,148,151,155,159,151,152,150,159,162,162,161,162,161,161,148,155,156,156,163,168,164,168,169,166,160,157]},
+  drutel:{km:19.17,
+    alt:[290,294,291,290,288,282,283,286,289,292,295,298,297,296,292,292,287,291,294,290,284,281,284,292,293,289,286,281,280,281,259,263,266,269,273,276,279,282,286,287,287,286,283,286,287,288,288,286,284,282,277,263,253,252,256,263,268,267,270,276,277,285,286,286,286,282,278,277,279,277,275,269,263,257,247,247,255,260,265,259,253,241,249,261,276,282,288,290,289,288,282,286,288,288,291,293,294,293,289,290,290,292,290,288,286,280,282,286,289,291,295,297,296,294,289,291,284,291,291,285,280,279,288,291,290,288,281,278,277,271,259,262,266,269,273,276,279,282,285,286,286,284,284,287,288,287,287,285,283,280,270,255,254,256,264,271,269,270,277,278,285,288,287,288,284,280,279,280,279,276,270,265,258,245,248,253,259,265,264,255,244,248,261,276,281,288,290,291,289,283,286,289,288,292,294,295,294,290,291,291],
+    t:[0,29,53,78,104,130,158,187,215,243,270,298,324,350,375,405,433,463,492,517,542,567,598,628,657,686,712,738,764,793,833,862,889,917,947,975,1005,1035,1064,1090,1118,1142,1168,1196,1223,1251,1279,1307,1332,1359,1384,1416,1444,1470,1499,1530,1564,1594,1623,1656,1686,1719,1746,1775,1803,1828,1854,1880,1907,1933,1958,1982,2006,2030,2071,2097,2128,2160,2193,2223,2251,2282,2313,2349,2393,2425,2458,2487,2515,2543,2567,2598,2629,2660,2690,2721,2750,2776,2801,2827,2852,2878,2902,2927,2952,2977,3005,3033,3061,3089,3117,3144,3169,3195,3222,3248,3273,3302,3330,3355,3378,3404,3435,3464,3493,3521,3546,3572,3598,3636,3673,3701,3728,3756,3784,3811,3842,3873,3902,3929,3954,3978,4004,4032,4059,4087,4113,4138,4162,4188,4216,4251,4277,4304,4334,4365,4393,4421,4450,4480,4512,4542,4569,4597,4622,4647,4673,4699,4725,4751,4776,4798,4822,4860,4888,4917,4947,4980,5014,5042,5075,5105,5142,5190,5226,5263,5293,5321,5349,5374,5405,5434,5465,5495,5525,5556,5579,5602,5626,5651],
+    hr:[93,117,132,140,145,146,146,147,149,155,157,157,156,153,154,151,150,150,157,156,154,148,148,161,161,158,155,151,148,151,148,148,157,160,160,162,162,162,160,160,161,159,158,157,159,159,157,155,153,150,151,149,147,147,155,163,161,158,154,158,158,158,162,159,160,156,152,152,155,156,156,155,149,148,145,152,160,163,164,164,161,156,157,165,170,170,171,168,167,163,160,158,162,158,160,159,161,159,159,155,159,160,163,163,161,156,155,158,162,163,164,165,162,160,156,156,158,161,162,161,158,154,159,163,162,159,159,159,157,154,155,162,165,166,167,166,166,163,166,165,164,164,161,164,164,163,164,162,162,162,161,154,155,157,166,168,167,163,164,166,168,169,166,164,164,161,157,159,160,161,160,159,154,152,157,163,166,167,167,163,157,157,167,169,171,171,170,169,163,161,158,161,161,159,164,163,164,163,164,168]},
+  monteynard:{km:39.01,
+    alt:[497,498,517,530,529,524,523,511,497,506,523,535,541,540,531,530,531,533,538,551,563,559,559,563,555,528,556,580,597,608,622,645,648,645,672,687,701,665,659,674,648,628,608,595,594,574,534,508,519,524,552,591,610,635,660,662,666,676,695,715,735,773,821,862,900,937,980,1025,1081,1140,1189,1241,1302,1332,1362,1406,1442,1460,1474,1509,1547,1576,1580,1587,1608,1619,1607,1589,1592,1603,1594,1597,1616,1654,1687,1718,1733,1752,1757,1770,1768,1753,1739,1691,1637,1579,1531,1507,1488,1469,1451,1436,1407,1384,1343,1319,1325,1333,1333,1304,1247,1200,1158,1131,1073,1031,1004,986,948,924,938,913,858,847,801,775,752,742,737,745,741,721,717,691,675,662,659,640,614,593,558,526,526,505,536,567,598,592,602,624,638,669,663,659,693,698,687,672,648,650,647,623,611,598,585,562,531,553,551,561,557,560,552,533,519,507,497,502,529,536,538,536,531,534,538,524,523,512,494,493],
+    t:[0,74,181,276,352,429,505,575,639,711,806,884,961,1032,1099,1168,1237,1307,1379,1464,1552,1619,1688,1758,1824,1985,2157,2292,2396,2491,2582,2706,2799,2884,3023,3131,3244,3333,3405,3494,3553,3613,3677,3754,3844,3934,4003,4068,4192,4340,4504,4680,4781,4898,5013,5074,5137,5217,5374,5592,5705,5847,6028,6193,6362,6521,6698,6893,7133,7387,7613,7817,8065,8194,8347,8535,8693,8810,8906,9071,9235,9374,9441,9526,9674,9788,9874,9967,10052,10147,10222,10306,10448,10614,10774,10923,11039,11158,11241,11349,11408,11465,11521,11598,11696,11786,11859,11925,11984,12039,12095,12157,12223,12286,12354,12777,12865,12965,13066,13130,13231,13323,13403,13473,13597,13706,13814,13917,14003,14105,14232,14335,14484,14626,14699,14767,14827,14888,14953,15048,15112,15171,15230,15280,15402,15456,15515,15630,15684,15741,15823,15922,16035,16123,16273,16430,16600,16695,16832,16973,17100,17262,17342,17422,17596,17817,17920,18004,18082,18181,18277,18380,18451,18524,18596,18682,18799,18940,19158,19266,19341,19422,19501,19579,19658,19742,19825,19910,20061,20148,20222,20289,20353,20423,20495,20565,20627,20692,20752,21043],
+    hr:[110,122,137,133,144,144,139,135,130,147,148,157,152,144,135,143,149,146,148,164,155,146,144,149,145,108,143,145,166,153,153,147,138,144,150,149,159,148,146,153,156,153,146,139,137,143,137,141,157,146,133,141,154,159,151,165,169,161,124,121,114,117,116,116,130,157,162,156,163,158,160,166,166,167,159,161,160,163,165,167,148,147,167,166,154,154,154,144,158,163,160,163,154,135,139,128,142,149,164,162,167,167,164,155,146,155,151,164,163,163,163,161,160,160,160,143,139,160,151,151,149,152,149,150,129,136,147,158,165,167,168,166,161,164,165,160,161,158,164,161,168,160,168,168,166,168,167,168,164,164,159,147,163,161,167,169,162,163,156,159,156,160,159,155,164,156,153,151,149,155,153,138,150,154,153,150,135,158,148,157,155,160,166,165,164,166,164,165,166,159,161,156,157,158,161,163,162,164,163,141]}
+};
+
+/* Activités Strava depuis le 24/08 : [id, date, heure, nom, type, km, D+, temps mouvement s, gear, effort relatif]
+   type "Foot" = football (exclu du volume course à pied, affiché à part). */
+const ACTIVITIES_SNAPSHOT = [
+["19903355197","2026-08-26","07:00","Course à pied le matin","Run",10.18,239,3430,"28255890",49],
+["19926044354","2026-08-27","18:49","Frac 5 x 1 km","Run",12.04,0,3835,"28255901",34],
+["19934174717","2026-08-28","12:20","EF Recup","Run",5.05,72,1953,"28255890",7],
+["19937973788","2026-08-28","17:35","Vélo dans l'après-midi","Ride",20.5,0,2760,"",0],
+["19944994723","2026-08-29","07:54","EF 2h","Run",19.35,527,7403,"28255890",81],
+["19959367944","2026-08-30","10:03","Course à pied le matin","Run",9.70,407,3571,"28255890",49],
+["19978836503","2026-08-31","18:23","Course à pied en soirée","Run",10.53,11,3271,"28255890",25],
+["20006796356","2026-09-01","21:05","Foot","Foot",6.1,0,4945,"",0],
+["20008301756","2026-09-02","17:01","Course à pied dans l'après-midi","Run",17.13,501,6869,"28255890",45],
+["20023030099","2026-09-03","18:00","Vélo en salle","Ride",39.0,0,5448,"",0],
+["20030180802","2026-09-04","09:12","Course à pied le matin","Run",10.36,252,3260,"33765917",42],
+["20051342323","2026-09-05","19:34","Course à pied en soirée","Run",11.79,303,3929,"33765917",59],
+["20065569134","2026-09-06","19:19","Course à pied en soirée","Run",10.75,451,3762,"33765917",45],
+["20091839749","2026-09-08","19:00","Evening Run — EF","Run",5.08,54,1821,"33765954",7],
+["20093774097","2026-09-08","20:50","Foot","Foot",6.3,15,3969,"33765954",31],
+["20106479757","2026-09-09","18:09","Local legend","Run",20.01,905,6500,"33765917",63],
+["20128876638","2026-09-11","12:20","EF — jambes lourdes","Run",10.03,418,4279,"33765917",38],
+["20141008883","2026-09-12","11:01","EF","Run",10.02,269,3603,"33765917",0],
+["20156506854","2026-09-13","11:10","Lunch Run","Run",18.63,642,6721,"33765917",67],
+["20189657109","2026-09-15","20:12","Course à pied en soirée","Run",5.04,54,1424,"28255901",20],
+["20194904502","2026-09-15","20:53","Foot","Foot",5.5,0,4440,"33765954",0],
+["20202806084","2026-09-16","18:13","Course à pied en soirée","Run",9.01,363,3310,"33765917",25],
+["20217606327","2026-09-17","18:43","Course à pied en soirée","Run",6.66,113,2171,"33765917",18],
+["20217599089","2026-09-17","19:19","Vélo en soirée","Ride",18.3,0,2700,"",0],
+["20225995951","2026-09-18","13:03","Course à pied dans l'après-midi","Run",8.03,101,2681,"33765917",13],
+["20243044911","2026-09-19","14:11","Trail de la Mine","Run",28.45,1506,13473,"33765917",200],
+["20252100567","2026-09-20","11:17","EF récup","Run",7.34,74,3035,"33765917",10],
+["20259252561","2026-09-20","19:51","Vélo en soirée","Ride",10.7,0,1560,"",0],
+["20269428247","2026-09-21","17:14","Course à pied dans l'après-midi","Run",8.45,433,3320,"33765917",20],
+["20284211827","2026-09-22","18:05","Course à pied en soirée","Run",5.18,162,2040,"33765917",7],
+["20295232486","2026-09-23","13:04","Course à pied dans l'après-midi","Run",9.04,102,2701,"33765917",32],
+["20298659087","2026-09-23","17:14","Course à pied dans l'après-midi","Run",11.03,351,4095,"33765917",31],
+["20312790628","2026-09-24","17:44","Vélo dans l'après-midi","Ride",20.5,0,3060,"",0],
+["20321763559","2026-09-25","11:22","Course à pied le midi","Run",10.87,313,3674,"33765917",31],
+["20340119411","2026-09-26","18:03","Course à pied en soirée","Run",5.47,110,1883,"33765917",7],
+["20346897975","2026-09-27","09:03","Course du Souffle Lacroix Laval","Run",19.17,398,5647,"33765917",147],
+["20380669272","2026-09-29","17:37","Course à pied dans l'après-midi","Run",8.41,343,3133,"33765917",20],
+["20384514429","2026-09-29","20:30","Foot","Foot",5.0,0,4801,"33765954",0],
+["20388929923","2026-09-30","08:34","Course à pied le matin","Run",6.53,283,2326,"34132737",21],
+["20408713542","2026-10-01","17:26","Course à pied dans l'après-midi","Run",7.79,179,2785,"33765917",11]
+];
+const SNAPSHOT_DATE = '2026-10-02';
+
+/* Chaussures : km Strava (snapshot) + infos du brief */
+const SHOES_BASE = [
+  {id:'33765917',name:'La Sportiva Prodigio Pro',brand:'La Sportiva',km:236.5,cap:600,role:'Trail principale (course + entraînement)',drop:6,weight:267,status:'active',note:'Taille 45 (un peu grand). Corrigé avec Sidas 3Feet Trail High + laçage heel lock.'},
+  {id:'34132737',name:'Saucony Guide 18',brand:'Saucony',km:6.5,cap:800,role:'Route EF (nouvelle)',drop:6,weight:null,status:'active',note:'Ajoutée sur Strava le 30/09. Prend le relais de la Guide 17 (le brief prévoyait la Guide 19).'},
+  {id:'21771172',name:'Saucony Guide 17',brand:'Saucony',km:848.4,cap:900,role:'Route EF (fin de vie)',drop:6,weight:270,status:'end_of_life',note:'Transition vers la nouvelle Guide.'},
+  {id:'28255890',name:'Brooks Caldera 8',brand:'Brooks',km:688.7,cap:700,role:'Trail (à retirer)',drop:6,weight:320,status:'retire',note:'Plus utilisée depuis le 02/09. Retirer.'},
+  {id:'28255901',name:'On Cloudflow 5',brand:'On',km:185.6,cap:700,role:'Fractionné route',drop:4,weight:270,status:'active',note:'OK pour fractionné.'},
+  {id:'33765954',name:'Adidas F50',brand:'Adidas',km:21.9,cap:null,role:'Foot / route test',drop:null,weight:null,status:'test',note:'Douleur périostite. Manque de stabilité. Sert surtout au foot.'},
+  {id:'28256595',name:'Saucony Guide 16',brand:'Saucony',km:724.7,cap:null,role:'Route (retirée)',drop:8,weight:null,status:'retired',note:'Prédécesseur Guide 17.'}
+];
+const SHOE_STATUS = {active:['Active','g'],end_of_life:['Fin de vie','a'],retire:['À retirer','r'],test:['Test','o'],retired:['Retirée','']};
+const SHOE_NEXT = [
+  'Route EF : Guide 17 → Guide 18 (déjà sur Strava). Brief initial : Guide 19, stabilité, drop 6 mm.',
+  'Trail longue distance backup Sainté-Lyon : Saucony Xodus Ultra 5 ou Brooks Cascadia Elite.'
+];
+
+const NUTRITION = {
+  daily:[
+    ['Énergie','2800-3200 kcal/j en charge · 2400-2600 en affûtage'],
+    ['Répartition','55 % glucides · 25 % lipides · 20 % protéines'],
+    ['Glucides','5-7 g/kg/j selon charge (385-540 g)'],
+    ['Protéines','1,6-1,8 g/kg/j (~130 g)'],
+    ['Post sortie longue','1,2 g/kg glucides + 0,3 g/kg protéines dans les 30 min (~92 g + 23 g)']
+  ],
+  pre:[
+    ['Charge glycogène J-3','8-10 g glucides/kg/j (~620-770 g)'],
+    ['Digestion','Réduire fibres et légumes crus'],
+    ['Hydratation','2-3 L/j avec sel']
+  ],
+  utbv:[
+    ['Objectif','50-60 g glucides/heure dès H+1'],
+    ['Gels','km 10, 17, 23, 28 (caféiné)'],
+    ['Boisson','Flasque 500 ml isotonique, refaite à chaque ravito'],
+    ['Sodium','500-700 mg/h']
+  ],
+  sl:[
+    ['Total','500-700 g glucides sur 10-12 h'],
+    ['0-5 h','Gels + isotonique'],
+    ['Après 5 h','Passage progressif au solide tiède : soupe, riz, fromage, coca'],
+    ['Froid','Bouillons chauds aux ravitos (froid nocturne +10-15 % de dépense)']
+  ]
+};
+
+/* Plan : semaines S35-S48. Bloc B (S42-S48) = proposition de coach, éditable. */
+const WEEKS = [
+  {w:35,phase:'Base',block:'A',km:50,d:1500},
+  {w:36,phase:'Build',block:'A',km:58,d:1700},
+  {w:37,phase:'Build',block:'A',km:65,d:1900},
+  {w:38,phase:'Pic',block:'A',km:70,d:2100,race:{day:5,type:'COURSE',title:'Trail de la Mine 29 km',km:28.5,dplus:1506,bpm:'145-165',pace:'7:30-8:00',note:'Course de préparation. Contrôle, jamais Z4.'}},
+  {w:39,phase:'Affûtage',block:'A',km:70,d:1800,race:{day:6,type:'COURSE',title:'Trail J. Drutel 20 km',km:20,dplus:390,bpm:'160-174',pace:'5:00',note:'2 boucles. Boucle 1 en 49:40 (contrôle), boucle 2 en 50:00 (résistance).'}},
+  {w:40,phase:'Affûtage',block:'A',detail:[
+    {type:'REPOS',title:'Repos',km:0,dplus:0,note:'Récup post-Drutel'},
+    {type:'EF',title:'EF souple',km:8,dplus:150,pace:'6:00-6:30',note:'Allure souple, FC < 150'},
+    {type:'TEMPO',title:'EF + tempo',km:10,dplus:200,note:'30 min EF + 15 min AS21'},
+    {type:'EF',title:'Trail vallonné',km:10,dplus:400,note:'Dernier D+ sérieux'},
+    {type:'RECUP',title:'Récup',km:5,dplus:50,note:'Footing 25 min'},
+    {type:'SL',title:'Sortie trail',km:10,dplus:300,bpm:'135-155',pace:'6:30-7:30',note:'Test nutrition + matériel UTBV'},
+    {type:'RECUP',title:'Décrassage',km:5,dplus:50,note:'Footing 25 min'}]},
+  {w:41,phase:'Course',block:'A',detail:[
+    {type:'EF',title:'EF court',km:6,dplus:100,note:'Tranquille'},
+    {type:'TEMPO',title:'Réactivation',km:5,dplus:100,pace:'allure course',note:'3 x 3 min allure course'},
+    {type:'REPOS',title:'Repos',km:0,dplus:0,note:''},
+    {type:'RECUP',title:'Dernier footing',km:4,dplus:50,note:'20 min très souple'},
+    {type:'REPOS',title:'Repos',km:0,dplus:0,note:'Préparer sac + nutrition. Charge glucidique.'},
+    {type:'COURSE',title:'UTBV 42 km',km:42.5,dplus:2173,bpm:'< 165',pace:'7:00-9:30',note:'COURSE. Départ prudent, FC < 150 jusqu\'au km 5.'},
+    {type:'REPOS',title:'Repos',km:0,dplus:0,note:''}]},
+  {w:42,phase:'Récup',block:'B',km:30,d:500,tpl:'recup'},
+  {w:43,phase:'Reprise',block:'B',km:50,d:1100},
+  {w:44,phase:'Build',block:'B',km:62,d:1500,night:true},
+  {w:45,phase:'Build',block:'B',km:72,d:1800},
+  {w:46,phase:'Pic',block:'B',km:80,d:2000,night:true},
+  {w:47,phase:'Affûtage',block:'B',km:50,d:1000},
+  {w:48,phase:'Course',block:'B',detail:[
+    {type:'EF',title:'EF court',km:6,dplus:50,note:'Tranquille'},
+    {type:'TEMPO',title:'Réactivation',km:5,dplus:50,note:'3 x 3 min allure course'},
+    {type:'REPOS',title:'Repos',km:0,dplus:0,note:''},
+    {type:'RECUP',title:'Dernier footing',km:4,dplus:30,note:'20 min très souple'},
+    {type:'REPOS',title:'Repos',km:0,dplus:0,note:'Sieste. Sac, frontale, couches chaudes.'},
+    {type:'COURSE',title:'Sainté-Lyon 80 km',km:80,dplus:2200,bpm:'< 155',pace:'7:30-9:00',note:'Départ 23h30. Partir lentement, manger tôt.'},
+    {type:'REPOS',title:'Repos',km:0,dplus:0,note:''}]}
+];
+
+const COACH_WORDS = {
+  35:'Bonne entrée en matière : 56 km, au-dessus du plan. On garde l\'EF vraiment souple, FC sous 155 en montée.',
+  36:'Volume en hausse et D+ dans le plan. Les Prodigio Pro entrent en rotation : progressif sur les longues sorties.',
+  37:'Grosse semaine : 64 km et 2290 D+. Jambes lourdes jeudi, signal normal de charge. Pas d\'intensité ajoutée.',
+  38:'Pic validé par le Trail de la Mine : 28,4 km / 1506 D+ en 3h44, FC 149. Couru en contrôle avec finish rapide. Meilleur indicateur de forme.',
+  39:'Drutel : 19,2 km en 1h34:07 à 4:55/km, FC 159. Objectif 1h40 battu sans jamais dépasser 172. La vitesse est là.',
+  40:'Affûtage. On baisse le volume, on garde un peu de rythme. Priorités : sommeil, hydratation, test nutrition samedi avec le matériel UTBV.',
+  41:'Semaine de course. Rien à gagner, tout à perdre : footings courts, sac prêt jeudi, charge glucidique dès mercredi. Samedi : départ prudent, pense Paladru.',
+  42:'Récupération post-UTBV. 2-3 jours sans courir, puis footings courts sans montre. Surveille les quadriceps et le sommeil.',
+  43:'Reprise vers la Sainté-Lyon. On réintroduit du bitume et une première sortie à la frontale.',
+  44:'Construction : sortie longue de nuit de 3 h sur terrain mixte. Teste frontale, couches chaudes, nutrition solide.',
+  45:'Gros bloc : samedi long + dimanche moyen pour courir sur fatigue. Bitume inclus : la Sainté-Lyon en a beaucoup.',
+  46:'Pic Sainté-Lyon : dernière très longue sortie de nuit. Après, on ne construit plus, on assimile.',
+  47:'Affûtage : volume -35 %, quelques accélérations courtes. Logistique de nuit prête : frontale, piles, veste, gants.',
+  48:'Sainté-Lyon. Départ 23h30. Partir lentement, manger dès la 1re heure, rester au chaud aux ravitos, passer au solide après 5 h.'
+};
+</script>
+
+<script>
+/* =========================================================
+   OUTILS
+   ========================================================= */
+const $ = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+const esc = s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DAYS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+const DAYS_L = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+const MONTHS = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+const pd = s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const ymd = d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const addDays = (d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const today0 = ()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate())};
+const daysBetween = (a,b)=>Math.round((b-a)/864e5);
+function weekStart(w){const j4=new Date(2026,0,4);const mon1=addDays(j4,-((j4.getDay()+6)%7));return addDays(mon1,(w-1)*7)}
+function isoWeek(d){const t=new Date(d.getFullYear(),d.getMonth(),d.getDate());t.setDate(t.getDate()+3-((t.getDay()+6)%7));const w1=new Date(t.getFullYear(),0,4);return 1+Math.round(((t-w1)/864e5-3+((w1.getDay()+6)%7))/7)}
+const fmtKm = (k,dp=1)=>(Math.round(k*10**dp)/10**dp).toLocaleString('fr-FR',{minimumFractionDigits:0,maximumFractionDigits:dp});
+const fmtInt = n=>Math.round(n).toLocaleString('fr-FR');
+function fmtPace(sPerKm){if(!isFinite(sPerKm)||sPerKm<=0)return '—';let m=Math.floor(sPerKm/60),s=Math.round(sPerKm-m*60);if(s===60){m++;s=0}return `${m}:${String(s).padStart(2,'0')}`}
+function parsePace(p){const m=String(p).match(/(\d+):(\d{2})/);return m?(+m[1])*60+(+m[2]):NaN}
+function fmtDur(sec,withSec=false){sec=Math.round(sec);const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;
+  if(h>0)return withSec?`${h}h${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`:`${h}h${String(m).padStart(2,'0')}`;
+  return withSec?`${m}:${String(s).padStart(2,'0')}`:`${m} min`}
+function fmtDateFr(d,opt={}){const x=typeof d==='string'?pd(d):d;return `${opt.day?DAYS_L[(x.getDay()+6)%7].toLowerCase()+' ':''}${x.getDate()} ${MONTHS[x.getMonth()]}`}
+const typeBadge = (t,extra='')=>{const T=TYPES[t]||TYPES.EF;return `<span class="badge" style="background:${T.color}1a;color:${shade(T.color)}">${extra}${T.label}</span>`};
+function shade(hex){/* version foncée lisible pour le texte */const n=parseInt(hex.slice(1),16);let r=n>>16,g=(n>>8)&255,b=n&255;const f=hex==='#93c5fd'||hex==='#9ca3af'?.55:.82;return `rgb(${Math.round(r*f)},${Math.round(g*f)},${Math.round(b*f)})`}
+const round5 = x=>Math.round(x*2)/2;
+const round10 = x=>Math.round(x/10)*10;
+
+/* Stockage : window.storage (artefact Claude) sinon localStorage */
+const store = {
+  async get(k){
+    try{ if(window.storage&&typeof window.storage.get==='function'){const r=await window.storage.get(k);if(r&&r.value!=null)return JSON.parse(r.value);return null} }catch(e){}
+    try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}
+  },
+  async set(k,v){
+    const s=JSON.stringify(v);
+    try{ if(window.storage&&typeof window.storage.set==='function'){await window.storage.set(k,s);return} }catch(e){}
+    try{localStorage.setItem(k,s)}catch(e){}
+  }
+};
+const local = {get(k){try{return localStorage.getItem(k)||''}catch(e){return ''}},set(k,v){try{v?localStorage.setItem(k,v):localStorage.removeItem(k)}catch(e){}}};
+
+/* Tooltip */
+const tipEl = document.getElementById('tip');
+function showTip(html,x,y){tipEl.innerHTML=html;tipEl.style.opacity=1;const w=tipEl.offsetWidth,h=tipEl.offsetHeight;let L=x+14,T=y-h-12;if(L+w>innerWidth-8)L=x-w-14;if(T<8)T=y+16;tipEl.style.left=L+'px';tipEl.style.top=T+'px'}
+function hideTip(){tipEl.style.opacity=0}
+
+/* =========================================================
+   ÉTAT
+   ========================================================= */
+const S = {
+  tab:'dash', planWeek:null, editMode:false, raceId:'utbv', utbvTarget:325*60,
+  edits:{}, uploads:{}, activities:null, shoesKm:{}, syncedAt:null, syncSource:'snapshot',
+  chat:[], chatBusy:false
+};
+const STORE_KEY='coachtrail:v1';
+async function loadState(){
+  const d = await store.get(STORE_KEY);
+  if(d){Object.assign(S,{edits:d.edits||{},uploads:d.uploads||{},activities:d.activities||null,shoesKm:d.shoesKm||{},syncedAt:d.syncedAt||null,syncSource:d.syncSource||'snapshot',utbvTarget:d.utbvTarget||S.utbvTarget,chat:d.chat||[]})}
+}
+let saveT=null;
+function save(){clearTimeout(saveT);saveT=setTimeout(()=>store.set(STORE_KEY,{edits:S.edits,uploads:S.uploads,activities:S.activities,shoesKm:S.shoesKm,syncedAt:S.syncedAt,syncSource:S.syncSource,utbvTarget:S.utbvTarget,chat:S.chat.slice(-40)}),250)}
+
+function activities(){
+  const src = S.activities || ACTIVITIES_SNAPSHOT;
+  return src.map(a=>({id:a[0],date:a[1],time:a[2],name:a[3],type:a[4],km:+a[5],dplus:+a[6],moving:+a[7],gear:a[8],re:+a[9]||0}));
+}
+function actsByDate(){
+  const m={};
+  for(const a of activities()){(m[a.date]=m[a.date]||[]).push(a)}
+  return m;
+}
+
+/* =========================================================
+   PLAN
+   ========================================================= */
+const INT_CYCLE = {
+  FRAC:{type:'FRAC',title:'Frac 5 x 1 km',note:'Récup 2:30. On Cloudflow.'},
+  COTES:{type:'COTES',title:'Côtes 10 x 1 min',note:'Récup descente trottinée. Gainage après.'},
+  TEMPO:{type:'TEMPO',title:'Tempo 3 x 10 min AS21',note:'Récup 3 min. Allure semi, pas plus.'}
+};
+function template(wk){
+  if(wk.tpl==='recup') return [
+    {type:'REPOS',title:'Repos',f:0,fd:0,note:'Récup post-course'},
+    {type:'RECUP',title:'Footing sans montre',f:.2,fd:.15,note:'Si les quadriceps le permettent'},
+    {type:'REPOS',title:'Repos',f:0,fd:0,note:''},
+    {type:'EF',title:'EF souple',f:.25,fd:.25,note:'Vélo possible à la place'},
+    {type:'REPOS',title:'Repos',f:0,fd:0,note:''},
+    {type:'EF',title:'EF trail souple',f:.35,fd:.45,note:'Plaisir, sans objectif'},
+    {type:'RECUP',title:'Footing',f:.2,fd:.15,note:''}];
+  const ic = ['FRAC','COTES','TEMPO'][(wk.w-35)%3];
+  const I = INT_CYCLE[ic];
+  const night = wk.night ? ' de nuit' : '';
+  return [
+    {type:'EF',title:'EF souple',f:.12,fd:.08,note:'Allure conversation'},
+    {type:I.type,title:I.title,f:.16,fd:.12,note:I.note},
+    {type:wk.phase==='Affûtage'?'REPOS':'CROSS',title:wk.phase==='Affûtage'?'Repos':'Repos ou vélo souple',f:0,fd:0,note:wk.phase==='Affûtage'?'':'45 min max en Z1, optionnel'},
+    {type:'EF',title:'EF trail vallonné',f:.2,fd:.25,note:'Marche active dans les pentes > 15 %'},
+    {type:'RECUP',title:'Récup / activation',f:.1,fd:.05,note:'Footing + 4 lignes droites'},
+    {type:'SL',title:'Sortie longue trail'+night,f:.32,fd:.4,note:wk.night?'Frontale, couches chaudes, nutrition solide après 2 h.':'Séance clé. Un gel toutes les 40 min.'},
+    {type:'EF',title:'Décrassage',f:.1,fd:.1,note:'Très souple'}];
+}
+function basePlan(wk){
+  if(wk.detail) return wk.detail.map(s=>({type:s.type,title:s.title,km:s.km,dplus:s.dplus,bpm:s.bpm||TYPE_DEF[s.type].bpm,pace:s.pace||TYPE_DEF[s.type].pace,note:s.note||''}));
+  const tpl = template(wk);
+  let kmLeft = wk.km, dLeft = wk.d, fSum = 1, fdSum = 1;
+  if(wk.race){kmLeft -= wk.race.km; dLeft -= wk.race.dplus; fSum -= tpl[wk.race.day].f; fdSum -= tpl[wk.race.day].fd}
+  const out = tpl.map((t,i)=>{
+    if(wk.race && i===wk.race.day){const r=wk.race;return {type:r.type,title:r.title,km:r.km,dplus:r.dplus,bpm:r.bpm,pace:r.pace,note:r.note}}
+    const km = t.f? round5(Math.max(0,kmLeft*t.f/fSum)) : 0;
+    const dp = t.fd? round10(Math.max(0,dLeft*t.fd/fdSum)) : 0;
+    return {type:t.type,title:t.title,km,dplus:dp,bpm:TYPE_DEF[t.type].bpm,pace:TYPE_DEF[t.type].pace,note:t.note};
+  });
+  /* Le reste d'arrondi va sur la plus grosse séance hors course : totaux = plan hebdo */
+  const free=out.map((x,i)=>i).filter(i=>!(wk.race&&i===wk.race.day));
+  const big=free.reduce((b,i)=>out[i].km>out[b].km?i:b,free[0]);
+  out[big].km=+(out[big].km+wk.km-out.reduce((a,x)=>a+x.km,0)).toFixed(1);
+  out[big].dplus=Math.max(0,out[big].dplus+wk.d-out.reduce((a,x)=>a+x.dplus,0));
+  return out;
+}
+function getWeek(w){
+  const wk = WEEKS.find(x=>x.w===w);
+  const ed = S.edits[w];
+  const plan = ed&&ed.plan ? ed.plan : basePlan(wk);
+  const start = weekStart(w);
+  const byDate = actsByDate();
+  const t0 = today0();
+  const sessions = plan.map((p,i)=>{
+    const date = addDays(start,i);
+    const ds = ymd(date);
+    const acts = (byDate[ds]||[]);
+    const runs = acts.filter(a=>a.type==='Run');
+    const sk = runs.reduce((s,a)=>s+a.km,0), sd = runs.reduce((s,a)=>s+a.dplus,0);
+    const ov = ed&&ed.days&&ed.days[i] || {};
+    const ak = ov.ak!=null ? ov.ak : sk;
+    const ad = ov.ad!=null ? ov.ad : sd;
+    const past = date < t0;
+    const done = ov.done!=null ? ov.done : (ak>0 || (past && p.type==='REPOS'));
+    return {...p,i,date,ds,acts,ak,ad,done,past,isToday:+date===+t0,manual:ov.ak!=null||ov.ad!=null};
+  });
+  const pk = sessions.reduce((s,x)=>s+(+x.km||0),0), pdp = sessions.reduce((s,x)=>s+(+x.dplus||0),0);
+  const rk = sessions.reduce((s,x)=>s+(+x.ak||0),0), rd = sessions.reduce((s,x)=>s+(+x.ad||0),0);
+  const foot = sessions.flatMap(s=>s.acts.filter(a=>a.type==='Foot'));
+  const ride = sessions.flatMap(s=>s.acts.filter(a=>a.type==='Ride'));
+  const end = addDays(start,6);
+  const status = t0>end ? 'past' : t0<start ? 'future' : 'current';
+  return {...wk,start,end,sessions,pk,pd:pdp,rk,rd,foot,ride,status,edited:!!ed};
+}
+function sessionOn(date){const w=isoWeek(date);if(w<35||w>48)return null;return getWeek(w).sessions[(date.getDay()+6)%7]}
+function currentWeekNum(){const w=isoWeek(today0());return Math.min(48,Math.max(35,w))}
+function ensureEdit(w){
+  if(!S.edits[w]) S.edits[w]={plan:basePlan(WEEKS.find(x=>x.w===w)).map(x=>({...x})),days:{}};
+  if(!S.edits[w].plan) S.edits[w].plan=basePlan(WEEKS.find(x=>x.w===w)).map(x=>({...x}));
+  if(!S.edits[w].days) S.edits[w].days={};
+  return S.edits[w];
+}
+
+/* =========================================================
+   RENDU : NAV + SYNC
+   ========================================================= */
+const TABS = [['dash','Tableau de bord'],['plan','Plan'],['cal','Calendrier'],['gpx','Parcours'],['zones','Zones & allures'],['coach','Coach IA']];
+function renderTabs(){
+  $('#tabs').innerHTML = TABS.map(([k,l])=>`<button class="tab ${S.tab===k?'on':''}" data-tab="${k}">${l}</button>`).join('');
+}
+function renderSync(){
+  const src = S.syncSource==='live' ? `<span class="dot live"></span><span class="lbl">Strava synchro ${S.syncedAt?new Date(S.syncedAt).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>`
+    : `<span class="dot ok"></span><span class="lbl">Données Strava du ${fmtDateFr(SNAPSHOT_DATE)}</span>`;
+  $('#sync').innerHTML = `${src} <button class="btn sm" data-act="sync" title="Synchroniser via Coach IA + Strava MCP">Synchro</button>`;
+}
+function go(tab){S.tab=tab;renderTabs();render();window.scrollTo({top:0})}
+function render(){
+  const f = {dash:renderDash,plan:renderPlan,cal:renderCal,gpx:renderGpx,zones:renderZones,coach:renderCoach}[S.tab];
+  $('#app').innerHTML = f();
+  after[S.tab]&&after[S.tab]();
+}
+const after = {};
+
+/* =========================================================
+   GRAPHIQUES SVG
+   ========================================================= */
+function barChart({weeks,keyP,keyR,unit,height=220,fmt=v=>fmtInt(v)}){
+  const W=640,H=height,pl=38,pr=8,pt=12,pb=26;
+  const max = Math.max(10,...weeks.map(w=>Math.max(w[keyP],w[keyR])))*1.1;
+  const nice = niceStep(max/4); const top = Math.ceil(max/nice)*nice;
+  const iw=(W-pl-pr)/weeks.length, bw=Math.min(16,iw*.32);
+  const y=v=>pt+(H-pt-pb)*(1-v/top);
+  let g='';
+  for(let v=0;v<=top+1e-6;v+=nice){g+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="#eef0f2"/><text x="${pl-6}" y="${y(v)+4}" text-anchor="end" font-size="10.5" fill="#9aa1ab">${fmtInt(v)}</text>`}
+  weeks.forEach((w,i)=>{
+    const cx=pl+iw*i+iw/2;
+    const cur = w.status==='current';
+    if(cur) g+=`<rect x="${pl+iw*i+1}" y="${pt}" width="${iw-2}" height="${H-pt-pb}" fill="#FC4C02" opacity=".06" rx="6"/>`;
+    g+=`<rect x="${cx-bw-1}" y="${y(w[keyP])}" width="${bw}" height="${Math.max(0,y(0)-y(w[keyP]))}" rx="3" fill="#e4e6ea"/>`;
+    if(w.status!=='future') g+=`<rect x="${cx+1}" y="${y(w[keyR])}" width="${bw}" height="${Math.max(0,y(0)-y(w[keyR]))}" rx="3" fill="${w.block==='B'?'#2563eb':'#FC4C02'}"/>`;
+    g+=`<text x="${cx}" y="${H-8}" text-anchor="middle" font-size="10.5" font-weight="${cur?700:500}" fill="${cur?'#FC4C02':'#6b7280'}">S${w.w}</text>`;
+    g+=`<rect x="${pl+iw*i}" y="${pt}" width="${iw}" height="${H-pt-pb}" fill="transparent" data-tip="${esc(`<b>S${w.w} · ${w.phase}</b><br>Planifié : ${fmt(w[keyP])} ${unit}<br>Réalisé : ${w.status==='future'?'—':fmt(w[keyR])+' '+unit}`)}"/>`;
+  });
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img">${g}</svg>`;
+}
+function niceStep(x){const p=10**Math.floor(Math.log10(x));const n=x/p;return (n<=1?1:n<=2?2:n<=5?5:10)*p}
+function bindTips(root=document){
+  $$('[data-tip]',root).forEach(el=>{
+    el.addEventListener('mousemove',e=>showTip(el.getAttribute('data-tip'),e.clientX,e.clientY));
+    el.addEventListener('mouseleave',hideTip);
+    el.addEventListener('touchstart',e=>{const t=e.touches[0];showTip(el.getAttribute('data-tip'),t.clientX,t.clientY);setTimeout(hideTip,1800)},{passive:true});
+  });
+}
+
+/* =========================================================
+   TABLEAU DE BORD
+   ========================================================= */
+function renderDash(){
+  const t0=today0();
+  const cw = currentWeekNum();
+  const weeks = WEEKS.map(w=>getWeek(w.w));
+  const cur = weeks.find(w=>w.w===cw);
+  const past = weeks.filter(w=>w.status!=='future');
+  const last4 = past.slice(-4);
+  const avg4 = last4.reduce((s,w)=>s+w.rk,0)/Math.max(1,last4.length);
+  const countdown = (id,cls)=>{const r=RACES[id];const d=daysBetween(t0,pd(r.date));
+    return `<div class="card cd ${cls}">
+      <svg class="mnt" width="180" height="110" viewBox="0 0 180 110"><path d="M0 110 50 30l30 40 25-30 75 70z" fill="#fff"/></svg>
+      <div class="lab">${d>0?'Compte à rebours':d===0?'Jour J':'Terminé'}</div>
+      <div class="big num">${d>0?'J-'+d:d===0?'GO':'✓'}</div>
+      <div class="ev">${r.short}</div>
+      <div class="meta">${fmtDateFr(r.date,{day:1})}${r.start?' · '+r.start:''} · ${r.km} km · ${fmtInt(r.dplus)} D+</div>
+      <div class="meta">Prédiction ${r.prediction}</div></div>`};
+  const pct = cur.pk? Math.min(100,cur.rk/cur.pk*100):0;
+  const shoes = shoeList();
+  const prod = shoes.find(s=>s.id==='33765917');
+  const acts = activities().slice().sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time)).slice(0,8);
+  return `
+  <div class="grid g4">
+    ${countdown('utbv','')}
+    ${countdown('saintelyon','blue')}
+    <div class="card kpi">
+      <div class="lab">Semaine S${cw} · ${cur.phase}</div>
+      <div class="val num">${fmtKm(cur.rk)} <small>/ ${fmtKm(cur.pk)} km</small></div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <div class="small muted" style="margin-top:8px">${fmtInt(cur.rd)} / ${fmtInt(cur.pd)} m D+${cur.foot.length?` · +${cur.foot.length} foot`:''}${cur.ride.length?` · +${cur.ride.length} vélo`:''}</div>
+    </div>
+    <div class="card kpi">
+      <div class="lab">Moyenne 4 dernières semaines</div>
+      <div class="val num">${fmtKm(avg4)} <small>km/sem</small></div>
+      <div class="small muted" style="margin-top:8px">${fmtInt(last4.reduce((s,w)=>s+w.rd,0)/Math.max(1,last4.length))} m D+/sem · Prodigio ${fmtInt(prod.km)} km</div>
+      <div class="small" style="margin-top:6px"><span class="pill g">Forme : TdlM 3h44 · Drutel 4:55/km</span></div>
+    </div>
+  </div>
+
+  <div class="grid g3" style="margin-top:16px">
+    <div class="card span2">
+      <h2>Mot du coach · S${cw}<span class="r">${fmtDateFr(cur.start)} → ${fmtDateFr(cur.end)}</span></h2>
+      <div class="coach">${esc(COACH_WORDS[cw]||'')}</div>
+      <h3>Séances de la semaine</h3>
+      <div class="circles">${cur.sessions.map(s=>{const T=TYPES[s.type];const fill=s.done;
+        return `<div class="circ ${s.isToday?'today':''}" data-tip="${esc(`<b>${DAYS_L[s.i]} · ${s.title}</b><br>Prévu : ${fmtKm(s.km)} km · ${s.dplus} m<br>${s.ak?`Réalisé : ${fmtKm(s.ak)} km · ${fmtInt(s.ad)} m`:s.done?'Fait':'À faire'}`)}">
+          <div class="c" style="border-color:${T.color};${fill?`background:${T.color};color:#fff`:`color:${shade(T.color)}`}">${s.type==='REPOS'?(fill?'✓':'—'):fill&&s.ak?fmtKm(s.ak,0):fmtKm(s.km,0)}</div>
+          <div class="d">${DAYS[s.i]}</div><div class="muted" style="font-size:11px">${T.label}</div></div>`}).join('')}</div>
+      <div class="row" style="margin-top:12px"><button class="btn sm" data-goplan="${cw}">Ouvrir le plan S${cw}</button><span class="small muted">Cercle plein = séance faite. Valeur = km réalisés, sinon km prévus.</span></div>
+      <div class="grid g2" style="margin-top:14px;gap:10px">${[0,1].map(k=>{const s=sessionOn(addDays(t0,k));if(!s)return '';
+        return `<div style="border:1px solid var(--line2);border-radius:12px;padding:12px">
+          <div class="row"><b>${k?'Demain':'Aujourd\'hui'}</b><span class="muted small">${fmtDateFr(s.date,{day:1})}</span><span class="sp"></span>${typeBadge(s.type)}</div>
+          <div style="font-weight:600;margin-top:6px">${esc(s.title)}${s.km?` · ${fmtKm(s.km)} km · ${s.dplus} m`:''}</div>
+          <div class="small muted">${s.bpm&&s.bpm!=='—'?'♥ '+esc(s.bpm)+' · ':''}${s.pace&&s.pace!=='—'?'⏱ '+esc(s.pace):''}</div>
+          ${s.note?`<div class="small" style="margin-top:4px">${esc(s.note)}</div>`:''}</div>`}).join('')}</div>
+      <div class="row" style="margin-top:10px"><button class="btn sm pri" data-race-go="utbv">Stratégie UTBV</button><button class="btn sm" data-tab="coach">Demander au coach</button></div>
+    </div>
+    <div class="card">
+      <h2>Chaussures<span class="r">km Strava</span></h2>
+      ${shoes.filter(s=>s.status!=='retired').map(shoeRow).join('')}
+    </div>
+  </div>
+
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card">
+      <h2>Volume hebdo · km<span class="r lg"><span><i style="background:#e4e6ea"></i>Planifié</span><span><i style="background:#FC4C02"></i>Bloc A</span><span><i style="background:#2563eb"></i>Bloc B</span></span></h2>
+      ${barChart({weeks,keyP:'pk',keyR:'rk',unit:'km',fmt:v=>fmtKm(v)})}
+    </div>
+    <div class="card">
+      <h2>Dénivelé hebdo · m D+<span class="r">courses incluses</span></h2>
+      ${barChart({weeks,keyP:'pd',keyR:'rd',unit:'m'})}
+    </div>
+  </div>
+
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card">
+      <h2>Activités Strava<span class="r">${S.syncSource==='live'?'synchro live':'snapshot'}</span></h2>
+      <div class="feed">${acts.map(actRow).join('')}</div>
+    </div>
+    <div class="card">
+      <h2>Courses de référence</h2>
+      ${['drutel','tdlm','monteynard','paladru'].map(id=>{const r=RACES[id];return `<div class="act">
+        <div class="ic" style="background:var(--orange-s);color:var(--orange-d)">${id==='paladru'?'!':'★'}</div>
+        <div style="min-width:0;flex:1"><div class="nm">${esc(r.name)}</div>
+        <div class="st"><span><b>${r.km}</b> km</span><span><b>${fmtInt(r.dplus)}</b> D+</span><span><b>${r.time}</b></span>${r.hr?`<span>FC <b>${r.hr}</b></span>`:''}${r.date?`<span>${fmtDateFr(r.date)}</span>`:''}</div>
+        <div class="small" style="margin-top:3px;color:var(--ink2)">${esc(r.analysis)}</div></div></div>`}).join('')}
+    </div>
+  </div>`;
+}
+after.dash = ()=>bindTips($('#app'));
+function shoeList(){return SHOES_BASE.map(s=>({...s,km:S.shoesKm[s.id]!=null?S.shoesKm[s.id]:s.km}))}
+function shoeRow(s){
+  const st=SHOE_STATUS[s.status];const pct=s.cap?Math.min(100,s.km/s.cap*100):0;
+  const col = !s.cap?'#9ca3af': pct>=95?'#dc2626': pct>=80?'#d97706':'#16a34a';
+  return `<div class="shoe"><div class="row"><b>${esc(s.name)}</b><span class="pill ${st[1]}">${st[0]}</span><span class="sp"></span><span class="num"><b>${fmtInt(s.km)}</b>${s.cap?` <span class="muted">/ ${s.cap}</span>`:''} km</span></div>
+    <div class="small muted">${esc(s.role)}${s.drop!=null?` · drop ${s.drop} mm`:''}${s.weight?` · ${s.weight} g`:''}</div>
+    ${s.cap?`<div class="bar"><i style="width:${pct}%;background:${col}"></i></div>`:''}</div>`;
+}
+function actRow(a){
+  const ic = a.type==='Ride'?['V','#e0f2f1','#0d9488']:a.type==='Foot'?['F','#f1f5f9','#475569']:a.dplus>300?['T','#fff1ea','#d93f00']:['R','#e8f7ee','#11733a'];
+  const pace = a.type==='Run'&&a.km>0? fmtPace(a.moving/a.km)+'/km':a.type==='Ride'?(a.km/(a.moving/3600)).toFixed(1)+' km/h':'';
+  const shoe = SHOES_BASE.find(s=>s.id===a.gear);
+  return `<div class="act"><div class="ic" style="background:${ic[1]};color:${ic[2]}">${ic[0]}</div>
+    <div style="min-width:0;flex:1"><div class="nm">${esc(a.name)}</div>
+    <div class="st"><span>${fmtDateFr(a.date)} · ${a.time}</span><span><b>${fmtKm(a.km,2)}</b> km</span>${a.dplus?`<span><b>${fmtInt(a.dplus)}</b> m</span>`:''}<span><b>${fmtDur(a.moving,true)}</b></span>${pace?`<span>${pace}</span>`:''}${a.re?`<span>RE ${a.re}</span>`:''}</div>
+    ${shoe?`<div class="small muted">${esc(shoe.name)}</div>`:''}</div>
+    <a class="small" href="https://www.strava.com/activities/${a.id}" target="_blank" rel="noopener">Strava</a></div>`;
+}
+
+/* =========================================================
+   PLAN DÉTAILLÉ
+   ========================================================= */
+function renderPlan(){
+  const w = S.planWeek || currentWeekNum();
+  S.planWeek = w;
+  const wk = getWeek(w);
+  const ed = S.editMode;
+  return `
+  <div class="card">
+    <div class="chips" id="wkchips">${WEEKS.map(x=>{const g=getWeek(x.w);return `<button class="chip ${x.w===w?'on':''}" data-week="${x.w}">S${x.w}${g.status==='current'?' •':''}</button>`}).join('')}</div>
+    <div class="wkhead" style="margin-top:14px">
+      <div><div class="small muted">Bloc ${wk.block} · ${fmtDateFr(wk.start)} → ${fmtDateFr(wk.end)}</div>
+      <div class="tt">S${w} · ${wk.phase} ${wk.status==='current'?'<span class="pill o">En cours</span>':''}${wk.edited?' <span class="pill">Modifiée</span>':''}</div></div>
+      <div class="sp"></div>
+      <div class="stats">
+        <div class="stat"><div class="l">Planifié</div><div class="v num">${fmtKm(wk.pk)} km · ${fmtInt(wk.pd)} m</div></div>
+        <div class="stat"><div class="l">Réalisé</div><div class="v num" style="color:var(--orange)">${fmtKm(wk.rk)} km · ${fmtInt(wk.rd)} m</div></div>
+        ${wk.foot.length||wk.ride.length?`<div class="stat"><div class="l">Hors course</div><div class="v small">${wk.foot.length?`${wk.foot.length} foot (${fmtDur(wk.foot.reduce((s,a)=>s+a.moving,0))})`:''} ${wk.ride.length?`· ${wk.ride.length} vélo (${fmtKm(wk.ride.reduce((s,a)=>s+a.km,0))} km)`:''}</div></div>`:''}
+      </div>
+    </div>
+    <div class="coach" style="margin-top:12px">${esc(COACH_WORDS[w]||'')}</div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn ${ed?'pri':''}" data-act="edit">${ed?'Terminer l\'édition':'Mode édition'}</button>
+      ${wk.edited?`<button class="btn" data-act="resetweek">Réinitialiser S${w}</button>`:''}
+      <span class="small muted">${ed?'Glisse les séances pour les réordonner (ou flèches sur mobile). Les jours restent fixes.':'Coche une séance pour la marquer faite. Réalisé = Strava, sauf saisie manuelle.'}</span>
+    </div>
+    <div id="sesslist" style="margin-top:6px">${wk.sessions.map(s=>ed?sessEdit(s,w):sessView(s,w)).join('')}</div>
+  </div>`;
+}
+function sessView(s,w){
+  const T=TYPES[s.type];
+  const actNames = s.acts.filter(a=>a.type!=='Run').map(a=>a.type==='Foot'?'Foot':'Vélo '+fmtKm(a.km)+' km');
+  return `<div class="sess ${s.done?'done':''} ${s.isToday?'today':''}">
+    <div class="day"><b>${DAYS[s.i]}</b><span>${s.date.getDate()}/${s.date.getMonth()+1}</span></div>
+    <div class="typ">${typeBadge(s.type)}</div>
+    <div class="body"><div class="ttl">${esc(s.title)}</div>
+      <div class="meta">${s.bpm&&s.bpm!=='—'?`<span>♥ ${esc(s.bpm)}</span>`:''}${s.pace&&s.pace!=='—'?`<span>⏱ ${esc(s.pace)}</span>`:''}${actNames.length?`<span>+ ${actNames.join(', ')}</span>`:''}</div>
+      ${s.note?`<div class="note">${esc(s.note)}</div>`:''}</div>
+    <div class="kwrap" style="display:contents">
+      <div class="k kp"><b class="num">${s.km?fmtKm(s.km):'—'}</b><span>${s.km?s.dplus+' m · prévu':'prévu'}</span></div>
+      <div class="k kr"><b class="num" style="color:${s.ak?'var(--orange)':'#c4c7cc'}">${s.ak?fmtKm(s.ak):'—'}</b><span>${s.ak?fmtInt(s.ad)+' m · réel':'réel'}${s.manual?' ✎':''}</span></div>
+    </div>
+    <div class="chkw"><button class="chk ${s.done?'on':''}" data-done="${w}:${s.i}" aria-label="Marquer fait">${s.done?'✓':''}</button></div>
+  </div>`;
+}
+function sessEdit(s,w){
+  return `<div class="sess edit" draggable="true" data-drag="${s.i}">
+    <div class="handle" title="Glisser"><span>⋮⋮</span><button class="btn sm" data-mv="${s.i}:-1" aria-label="Monter" style="padding:0 4px">↑</button><button class="btn sm" data-mv="${s.i}:1" aria-label="Descendre" style="padding:0 4px">↓</button></div>
+    <div class="day"><b>${DAYS[s.i]}</b><span>${s.date.getDate()}/${s.date.getMonth()+1}</span></div>
+    <div><select data-f="${s.i}:type">${Object.keys(TYPES).map(k=>`<option value="${k}" ${k===s.type?'selected':''}>${TYPES[k].label}</option>`).join('')}</select></div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <input data-f="${s.i}:title" value="${esc(s.title)}" placeholder="Séance">
+      <div class="mini"><input data-f="${s.i}:bpm" value="${esc(s.bpm)}" placeholder="BPM"><input data-f="${s.i}:pace" value="${esc(s.pace)}" placeholder="Allure"></div>
+      <textarea data-f="${s.i}:note" placeholder="Note">${esc(s.note)}</textarea>
+    </div>
+    <div class="mini"><div><label>km prévu</label><input type="number" step="0.5" min="0" data-f="${s.i}:km" value="${s.km}"></div><div><label>D+ prévu</label><input type="number" step="10" min="0" data-f="${s.i}:dplus" value="${s.dplus}"></div></div>
+    <div class="mini"><div><label>km réel</label><input type="number" step="0.1" min="0" data-d="${s.i}:ak" value="${s.ak?+s.ak.toFixed(2):''}"></div><div><label>D+ réel</label><input type="number" step="1" min="0" data-d="${s.i}:ad" value="${s.ad?Math.round(s.ad):''}"></div></div>
+    <div><button class="chk ${s.done?'on':''}" data-done="${w}:${s.i}">${s.done?'✓':''}</button></div>
+  </div>`;
+}
+after.plan = ()=>{
+  const w=S.planWeek;
+  const el=$('#wkchips .on'); if(el) el.scrollIntoView({block:'nearest',inline:'center'});
+  if(!S.editMode) return;
+  const list=$('#sesslist');
+  list.addEventListener('change',e=>{
+    const t=e.target;
+    if(t.dataset.f){const [i,k]=t.dataset.f.split(':');const E=ensureEdit(w);let v=t.value;if(k==='km'||k==='dplus')v=Math.max(0,+v||0);E.plan[+i][k]=v;
+      if(k==='type'){E.plan[+i].bpm=E.plan[+i].bpm||TYPE_DEF[v].bpm}
+      save();render()}
+    if(t.dataset.d){const [i,k]=t.dataset.d.split(':');const E=ensureEdit(w);E.days[i]=E.days[i]||{};E.days[i][k]=t.value===''?null:Math.max(0,+t.value);
+      if(E.days[i][k]==null)delete E.days[i][k];save();render()}
+  });
+  let from=null;
+  $$('.sess[data-drag]',list).forEach(row=>{
+    row.addEventListener('dragstart',e=>{from=+row.dataset.drag;row.classList.add('drag');e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',String(from))}catch(_){}});
+    row.addEventListener('dragend',()=>{row.classList.remove('drag');$$('.sess.over',list).forEach(r=>r.classList.remove('over'))});
+    row.addEventListener('dragover',e=>{e.preventDefault();row.classList.add('over')});
+    row.addEventListener('dragleave',()=>row.classList.remove('over'));
+    row.addEventListener('drop',e=>{e.preventDefault();const to=+row.dataset.drag;if(from!=null&&from!==to)swapSessions(w,from,to);from=null});
+  });
+};
+function swapSessions(w,a,b){
+  const E=ensureEdit(w);
+  if(b<0||b>6) return;
+  const t=E.plan[a];E.plan[a]=E.plan[b];E.plan[b]=t;save();render();
+}
+
+/* =========================================================
+   CALENDRIER
+   ========================================================= */
+function renderCal(){
+  const t0=today0();
+  const months=[[2026,7],[2026,8],[2026,9],[2026,10]];
+  const wkCache={};WEEKS.forEach(w=>wkCache[w.w]=getWeek(w.w));
+  const raceDates = {};['monteynard','tdlm','drutel','utbv','saintelyon'].forEach(id=>raceDates[RACES[id].date]=RACES[id]);
+  const actMap = actsByDate();
+  let html=`<div class="card"><h2>Calendrier août → novembre 2026</h2>
+    <div class="legend">${Object.keys(TYPES).map(k=>typeBadge(k)).join('')}</div>
+    <div class="small muted" style="margin-top:8px">Totaux hebdo = planifié / réalisé, courses incluses. Clique un jour pour ouvrir sa semaine.</div></div>`;
+  for(const [y,m] of months){
+    const first=new Date(y,m,1), last=new Date(y,m+1,0);
+    let d=addDays(first,-((first.getDay()+6)%7));
+    html+=`<div class="card" style="margin-top:16px"><h2 style="text-transform:capitalize">${MONTHS[m]} ${y}</h2><div class="cal">
+      ${DAYS.map(x=>`<div class="h">${x}</div>`).join('')}<div class="h">Semaine</div>`;
+    while(d<=last){
+      const wn=isoWeek(d);const wk=wkCache[wn];
+      for(let i=0;i<7;i++){
+        const day=addDays(d,i);const ds=ymd(day);const out=day.getMonth()!==m;
+        const s=wk?wk.sessions[i]:null;const race=raceDates[ds];
+        const runs=(actMap[ds]||[]).filter(a=>a.type==='Run');const rk=runs.reduce((a,b)=>a+b.km,0);
+        let inner='';
+        if(s && s.type!=='REPOS'){const T=TYPES[s.type];inner+=`<div class="tb" style="background:${T.color}1f;color:${shade(T.color)}" title="${esc(s.title)}">${T.label}${s.km?' '+fmtKm(s.km):''}</div>`}
+        else if(s) inner+=`<div class="tb" style="background:#f3f4f6;color:#6b7280">Repos</div>`;
+        else if(race) inner+=`<div class="tb" style="background:#FC4C021f;color:#d93f00">${race.short}</div>`;
+        if(s&&s.type==='COURSE') inner+=`<div class="rk" style="color:var(--orange-d);font-weight:600">${esc(race?race.short:s.title)}</div>`;
+        if(rk) inner+=`<div class="rk">✓ ${fmtKm(rk)} km</div>`;
+        else if(s&&s.done&&s.type==='REPOS'&&!out) inner+=`<div class="rk">✓</div>`;
+        html+=`<div class="cell ${out?'out':''} ${+day===+t0?'today':''} ${race?'race':''}" ${wk?`data-goplan="${wn}"`:''}><div class="dn"><span>${day.getDate()}</span>${rk?'<span style="color:var(--green)">●</span>':''}</div>${inner}</div>`;
+      }
+      html+= wk?`<div class="wtot" data-goplan="${wn}" style="cursor:pointer"><span class="muted">S${wn}</span><b class="num">${fmtKm(wk.pk)} / ${wk.status==='future'?'—':fmtKm(wk.rk)} km</b><span class="num muted">${fmtInt(wk.pd)} / ${wk.status==='future'?'—':fmtInt(wk.rd)} m</span></div>`
+               :`<div class="wtot"><span class="muted">S${wn}</span><span class="muted">hors plan</span></div>`;
+      d=addDays(d,7);
+    }
+    html+=`</div></div>`;
+  }
+  return html;
+}
+
+/* =========================================================
+   PARCOURS / GPX
+   ========================================================= */
+function streamPts(id){
+  const s=STREAMS[id];const n=s.alt.length;
+  return s.alt.map((a,i)=>({km:s.km*i/(n-1),alt:a,t:s.t[i],hr:s.hr[i]}));
+}
+function schemaPts(){
+  const out=[];
+  for(let k=0;k<UTBV_SCHEMA.length-1;k++){
+    const [x0,y0]=UTBV_SCHEMA[k],[x1,y1]=UTBV_SCHEMA[k+1];
+    const n=Math.max(2,Math.round((x1-x0)*6));
+    for(let j=0;j<n;j++){const f=j/n;const e=(1-Math.cos(Math.PI*f))/2;out.push({km:x0+(x1-x0)*f,alt:y0+(y1-y0)*e})}
+  }
+  out.push({km:42.53,alt:450});return out;
+}
+function cumGain(pts){
+  /* D+ / D- avec hystérésis 4 m pour filtrer le bruit */
+  let up=0,down=0,ref=pts[0].alt;const cu=[0],cd=[0];
+  for(let i=1;i<pts.length;i++){const d=pts[i].alt-ref;if(d>=4){up+=d;ref=pts[i].alt}else if(d<=-4){down-=d;ref=pts[i].alt}cu.push(up);cd.push(down)}
+  return {up,down,cu,cd};
+}
+const RACE_LIST = [
+  {id:'utbv',label:'UTBV 2026',kind:'goal'},
+  {id:'saintelyon',label:'Sainté-Lyon',kind:'goal'},
+  {id:'drutel',label:'Trail Drutel',kind:'done'},
+  {id:'tdlm',label:'Trail de la Mine',kind:'done'},
+  {id:'monteynard',label:'Monteynard',kind:'done'}
+];
+function raceProfile(id){
+  const up=S.uploads[id];
+  if(up) return {pts:up.pts.map(p=>({km:p[0],alt:p[1]})),src:'gpx',file:up.name};
+  if(STREAMS[id]) return {pts:streamPts(id),src:'strava'};
+  if(id==='utbv') return {pts:schemaPts(),src:'schema'};
+  return null;
+}
+function sectionsFor(id,prof){
+  const R=RACES[id];
+  const total = prof? prof.pts[prof.pts.length-1].km : R.km;
+  if(id==='utbv') return UTBV_SECTIONS.map(s=>({...s,to:Math.min(s.to,total)}));
+  if(id==='drutel') return [{from:0,to:total/2,note:'Boucle 1'},{from:total/2,to:total,note:'Boucle 2'}];
+  const out=[];for(let k=0;k<total-0.01;k+=5)out.push({from:k,to:Math.min(total,k+5)});return out;
+}
+function statsBetween(pts,g,a,b){
+  let i0=pts.findIndex(p=>p.km>=a);if(i0<0)i0=pts.length-1;
+  let i1=pts.findIndex(p=>p.km>=b-1e-6);if(i1<0)i1=pts.length-1;
+  const up=g.cu[i1]-g.cu[i0],down=g.cd[i1]-g.cd[i0];
+  let hr=0,n=0;for(let i=i0;i<=i1;i++)if(pts[i].hr){hr+=pts[i].hr;n++}
+  const t = pts[i1].t!=null&&pts[i0].t!=null? pts[i1].t-pts[i0].t : null;
+  return {up,down,hr:n?hr/n:null,t,a0:pts[i0].alt,a1:pts[i1].alt};
+}
+
+function profileSVG(pts,{sections=[],markers=[],height=240}={}){
+  const W=760,H=height,pl=40,pr=10,pt=14,pb=26;
+  const maxKm=pts[pts.length-1].km;
+  const amin=Math.min(...pts.map(p=>p.alt)),amax=Math.max(...pts.map(p=>p.alt));
+  const lo=Math.floor((amin-30)/50)*50, hi=Math.ceil((amax+30)/50)*50;
+  const x=k=>pl+(W-pl-pr)*k/maxKm, y=a=>pt+(H-pt-pb)*(1-(a-lo)/(hi-lo));
+  let d=`M${x(0)},${y(pts[0].alt)}`;pts.forEach(p=>d+=`L${x(p.km).toFixed(1)},${y(p.alt).toFixed(1)}`);
+  const area=d+`L${x(maxKm)},${H-pb}L${x(0)},${H-pb}Z`;
+  let g=`<defs><linearGradient id="pg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#FC4C02" stop-opacity=".35"/><stop offset="1" stop-color="#FC4C02" stop-opacity=".03"/></linearGradient></defs>`;
+  const st=niceStep((hi-lo)/4);
+  for(let v=Math.ceil(lo/st)*st;v<=hi;v+=st)g+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="#eef0f2"/><text x="${pl-6}" y="${y(v)+4}" text-anchor="end" font-size="10.5" fill="#9aa1ab">${v}</text>`;
+  const ks=maxKm>30?5:maxKm>12?2:1;
+  for(let k=0;k<=maxKm+1e-6;k+=ks)g+=`<text x="${x(k)}" y="${H-8}" text-anchor="middle" font-size="10.5" fill="#9aa1ab">${k}</text>`;
+  sections.forEach((s,i)=>{if(i%2)g+=`<rect x="${x(s.from)}" y="${pt}" width="${x(s.to)-x(s.from)}" height="${H-pt-pb}" fill="#f6f7f9"/>`});
+  g+=`<path d="${area}" fill="url(#pg)"/><path d="${d}" fill="none" stroke="#FC4C02" stroke-width="2" stroke-linejoin="round"/>`;
+  markers.forEach(m=>{if(m.km>maxKm)return;let p=pts.reduce((b,q)=>Math.abs(q.km-m.km)<Math.abs(b.km-m.km)?q:b,pts[0]);
+    g+=`<line x1="${x(m.km)}" x2="${x(m.km)}" y1="${y(p.alt)}" y2="${pt+4}" stroke="#2563eb" stroke-dasharray="3 3"/><circle cx="${x(m.km)}" cy="${y(p.alt)}" r="4.5" fill="#2563eb" stroke="#fff" stroke-width="2"/><text x="${x(m.km)+4}" y="${pt+10}" font-size="10.5" font-weight="600" fill="#2563eb">${esc(m.label)}</text>`});
+  g+=`<line id="pcx" x1="0" x2="0" y1="${pt}" y2="${H-pb}" stroke="#111827" stroke-width="1" opacity="0"/><circle id="pcd" r="5" fill="#fff" stroke="#FC4C02" stroke-width="2.5" opacity="0"/>`;
+  g+=`<rect id="phit" x="${pl}" y="${pt}" width="${W-pl-pr}" height="${H-pt-pb}" fill="transparent"/>`;
+  return {svg:`<svg class="chart" id="prof" viewBox="0 0 ${W} ${H}">${g}</svg>`,x,y,W,pl,pr,maxKm};
+}
+function bindProfile(pts,geom,g){
+  const svg=$('#prof');if(!svg)return;const hit=$('#phit');
+  const move=(cx,cy)=>{
+    const r=svg.getBoundingClientRect();const vx=(cx-r.left)/r.width*geom.W;
+    const km=Math.max(0,Math.min(geom.maxKm,(vx-geom.pl)/(geom.W-geom.pl-geom.pr)*geom.maxKm));
+    let bi=0;for(let i=1;i<pts.length;i++)if(Math.abs(pts[i].km-km)<Math.abs(pts[bi].km-km))bi=i;
+    const p=pts[bi];
+    $('#pcx').setAttribute('x1',geom.x(p.km));$('#pcx').setAttribute('x2',geom.x(p.km));$('#pcx').setAttribute('opacity',.25);
+    $('#pcd').setAttribute('cx',geom.x(p.km));$('#pcd').setAttribute('cy',geom.y(p.alt));$('#pcd').setAttribute('opacity',1);
+    showTip(`<b>km ${fmtKm(p.km,2)}</b> · ${Math.round(p.alt)} m<br>D+ cumulé ${fmtInt(g.cu[bi]*(g.scale||1))} m${p.hr?`<br>FC ${p.hr}`:''}${p.t!=null?`<br>Temps ${fmtDur(p.t,true)}`:''}`,cx,cy);
+  };
+  hit.addEventListener('mousemove',e=>move(e.clientX,e.clientY));
+  hit.addEventListener('mouseleave',()=>{hideTip();$('#pcx').setAttribute('opacity',0);$('#pcd').setAttribute('opacity',0)});
+  hit.addEventListener('touchmove',e=>{const t=e.touches[0];move(t.clientX,t.clientY)},{passive:true});
+  hit.addEventListener('touchend',()=>setTimeout(hideTip,1200));
+}
+function cumSVG(pts,g,scale){
+  const W=760,H=120,pl=40,pr=10,pt=8,pb=20;const maxKm=pts[pts.length-1].km;const top=Math.max(1,g.up*scale);
+  const x=k=>pl+(W-pl-pr)*k/maxKm,y=v=>pt+(H-pt-pb)*(1-v/top);
+  let d='';pts.forEach((p,i)=>d+=`${i?'L':'M'}${x(p.km).toFixed(1)},${y(g.cu[i]*scale).toFixed(1)}`);
+  let gr='';const st=niceStep(top/3);for(let v=0;v<=top;v+=st)gr+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="#eef0f2"/><text x="${pl-6}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="#9aa1ab">${fmtInt(v)}</text>`;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}">${gr}<path d="${d}" fill="none" stroke="#2563eb" stroke-width="2"/></svg>`;
+}
+
+/* Modèle de prédiction : km-effort (km + D+/100) et loi de Riegel 1.06 */
+const REFS = {
+  tdlm:{label:'Trail de la Mine',km:28.45,dplus:1506,sec:13473},
+  monteynard:{label:'Monteynard',km:39,dplus:2122,sec:20760},
+  drutel:{label:'Trail Drutel',km:19.17,dplus:398,sec:5647},
+  paladru:{label:'Paladru',km:55,dplus:2000,sec:26400}
+};
+function predict(km,dplus,ref='tdlm'){const r=REFS[ref];const ke=km+dplus/100,ke0=r.km+r.dplus/100;return r.sec*Math.pow(ke/ke0,1.06)}
+
+function renderGpx(){
+  const id=S.raceId;const R=RACES[id];const prof=raceProfile(id);
+  const chips=`<div class="chips">${RACE_LIST.map(r=>`<button class="chip ${r.id===id?'on':''}" data-race="${r.id}">${r.label}${r.kind==='done'?' ✓':''}</button>`).join('')}</div>`;
+  const upl=`<div class="card"><h2>Importer un GPX<span class="r">${S.uploads[id]?esc(S.uploads[id].name):''}</span></h2>
+    <div class="drop" data-act="gpx">Dépose ou choisis un fichier .gpx pour <b>${esc(R.short)}</b><br><span class="small">ex. ${id==='utbv'?'ultra-trail-du-beaujolais-vert-2025-utbv-42-kilometres.gpx':id==='tdlm'?'TDLM_2026_-_29km.gpx':id==='drutel'?'virade_2026_trail_10_et_20kms.gpx':'trace officielle'}</span></div>
+    ${S.uploads[id]?`<div class="row" style="margin-top:10px"><button class="btn sm" data-act="rmgpx">Retirer le GPX</button></div>`:''}</div>`;
+  if(!prof){
+    return `<div class="card">${chips}</div>
+    <div class="grid g2" style="margin-top:16px">
+      <div class="card"><h2>${esc(R.name)}</h2>
+        <div class="stats"><div class="stat"><div class="l">Date</div><div class="v">${fmtDateFr(R.date)} · ${R.start}</div></div><div class="stat"><div class="l">Distance</div><div class="v">${R.km} km</div></div><div class="stat"><div class="l">D+</div><div class="v">${fmtInt(R.dplus)} m</div></div><div class="stat"><div class="l">Prédiction</div><div class="v">${R.prediction}</div></div></div>
+        <p class="small" style="margin-top:12px">${esc(R.notes)}</p>
+        <div class="info">Modèle km-effort depuis le Trail de la Mine : <b>${fmtDur(predict(R.km,R.dplus,'tdlm'))}</b> à effort égal. Ajoute la nuit, le froid et le premier ultra : la fourchette ${R.prediction} reste la bonne base.</div>
+        <h3>Nutrition en course</h3>${kvTable(NUTRITION.sl)}</div>
+      ${upl}</div>`;
+  }
+  const pts=prof.pts;const g=cumGain(pts);
+  const total=pts[pts.length-1].km;
+  /* Mise à l'échelle du D+ issu du flux 200 points vers le D+ officiel Strava */
+  const scale = prof.src==='strava'? R.dplus/Math.max(1,g.up) : prof.src==='schema'? R.dplus/Math.max(1,g.up) : 1;
+  g.scale=scale;
+  const secs=sectionsFor(id,prof);
+  const markers = id==='utbv'?UTBV_MARKERS:[];
+  const P=profileSVG(pts,{sections:secs,markers});
+  let strat='',head='';
+  if(id==='utbv'){
+    const baseSec=UTBV_SECTIONS.map(s=>parsePace(s.pace)*(s.to-s.from));const baseTot=baseSec.reduce((a,b)=>a+b,0);
+    const f=S.utbvTarget/baseTot;let cum=0;
+    const rows=UTBV_SECTIONS.map((s,i)=>{const st=prof.src==='gpx'?statsBetween(pts,g,s.from,s.to):null;const sec=baseSec[i]*f;cum+=sec;
+      return `<tr><td class="num"><b>${s.from}→${fmtKm(s.to,1)}</b></td><td class="r num">+${st?Math.round(st.up):s.up}<br><span class="muted">-${st?Math.round(st.down):s.down}</span></td>
+        <td class="r num"><b>${fmtPace(parsePace(s.pace)*f)}</b><br><span class="muted">${s.pace}</span></td><td class="num">${s.fc}</td><td class="r num">${fmtDur(sec)}</td><td class="r num"><b>${fmtDur(cum)}</b></td><td>${esc(s.note)}</td></tr>`}).join('');
+    head=`<div class="card"><h2>Stratégie de course<span class="r">temps cible ${fmtDur(S.utbvTarget)}</span></h2>
+      <div class="row"><span class="small muted">4h50</span><input type="range" min="${290*60}" max="${370*60}" step="60" value="${S.utbvTarget}" id="utbvT" style="flex:1"><span class="small muted">6h10</span></div>
+      <div class="grid g3" style="margin-top:12px;gap:10px">
+        <div class="stat"><div class="l">Prédiction brief</div><div class="v">${R.prediction}</div></div>
+        <div class="stat"><div class="l">Modèle TdlM</div><div class="v">${fmtDur(predict(R.km,R.dplus,'tdlm'))}</div></div>
+        <div class="stat"><div class="l">Modèle Monteynard</div><div class="v">${fmtDur(predict(R.km,R.dplus,'monteynard'))}</div></div>
+      </div>
+      <div class="warn" style="margin-top:12px">Les allures par tronçon du brief totalisent <b>${fmtDur(baseTot)}</b>, au-dessus de la prédiction ${R.prediction}. Le curseur garde la même répartition d'effort et ajuste les allures au temps cible. Le TdlM était couru en contrôle : viser 5h25 au départ, accélérer après le km 35 si les jambes répondent.</div>
+      <div class="tw" style="margin-top:12px"><table><thead><tr><th>Tronçon km</th><th class="r">D+ / D-</th><th class="r">Allure cible<br><span style="font-weight:500">brief</span></th><th>FC</th><th class="r">Temps</th><th class="r">Passage</th><th>Consigne</th></tr></thead><tbody>${rows}</tbody></table></div>
+    </div>`;
+    strat=`<div class="card"><h2>Nutrition UTBV</h2>${kvTable(NUTRITION.utbv)}<h3>Avant course (J-3)</h3>${kvTable(NUTRITION.pre)}</div>`;
+  } else {
+    const isDone=!!STREAMS[id]&&prof.src==='strava';
+    const rows=secs.map(s=>{const st=statsBetween(pts,g,s.from,s.to);const dist=s.to-s.from;
+      const tt = isDone&&st.t!=null? st.t : predict(dist,st.up*scale,'tdlm')*1;
+      return `<tr><td class="num"><b>${fmtKm(s.from,1)}→${fmtKm(s.to,1)}</b>${s.note?`<br><span class="muted">${s.note}</span>`:''}</td><td class="r num">+${fmtInt(st.up*scale)}<br><span class="muted">-${fmtInt(st.down*scale)}</span></td><td class="r num">${Math.round(st.a0)} → ${Math.round(st.a1)}</td>
+        <td class="r num"><b>${fmtPace(tt/dist)}</b></td><td class="r num">${fmtDur(tt,true)}</td><td class="r num">${st.hr?Math.round(st.hr):'—'}</td></tr>`}).join('');
+    head=`<div class="card"><h2>${isDone?'Analyse par tronçon':'Estimation par tronçon'}<span class="r">${isDone?'données Strava':'modèle km-effort TdlM'}</span></h2>
+      <div class="tw"><table><thead><tr><th>Tronçon km</th><th class="r">D+ / D-</th><th class="r">Altitude</th><th class="r">Allure</th><th class="r">Temps</th><th class="r">FC moy</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+    strat=`<div class="card"><h2>Analyse coach</h2><p style="margin-top:0">${esc(R.analysis||'')}</p>
+      ${R.best?`<h3>Meilleurs efforts</h3>${kvTable(Object.entries(R.best))}`:''}
+      ${R.target?`<div class="info">Objectif initial : ${R.target}. Réalisé : ${R.time} sur ${R.km} km mesurés (le parcours annoncé faisait 20,02 km).</div>`:''}</div>`;
+  }
+  const srcLab = prof.src==='gpx'?`GPX : ${esc(prof.file)}`:prof.src==='strava'?'Flux altitude Strava, 200 points':'Profil schématique depuis les points clés du brief';
+  return `<div class="card">${chips}</div>
+  <div class="card" style="margin-top:16px">
+    <h2>${esc(R.name)}<span class="r">${srcLab}</span></h2>
+    <div class="stats" style="margin-bottom:10px">
+      <div class="stat"><div class="l">Distance</div><div class="v num">${fmtKm(total,2)} km</div></div>
+      <div class="stat"><div class="l">D+</div><div class="v num">${fmtInt(prof.src==='gpx'?g.up:R.dplus)} m</div></div>
+      <div class="stat"><div class="l">Alt. min / max</div><div class="v num">${Math.round(Math.min(...pts.map(p=>p.alt)))} / ${Math.round(Math.max(...pts.map(p=>p.alt)))} m</div></div>
+      ${R.date?`<div class="stat"><div class="l">Date</div><div class="v">${fmtDateFr(R.date)}</div></div>`:''}
+      ${R.time?`<div class="stat"><div class="l">Temps</div><div class="v">${R.time}</div></div>`:''}
+    </div>
+    ${prof.src==='schema'?`<div class="warn" style="margin-bottom:10px">Profil indicatif reconstruit depuis départ 450 m, sommets 827 m et 809 m, point bas 317 m. Importe le GPX UTBV pour le profil réel.</div>`:''}
+    ${P.svg}
+    <h3>D+ cumulé</h3>${cumSVG(pts,g,scale)}
+  </div>
+  <div style="margin-top:16px">${head}</div>
+  <div class="grid g2" style="margin-top:16px">${strat}${upl}</div>`;
+}
+after.gpx = ()=>{
+  const prof=raceProfile(S.raceId);if(!prof)return;
+  const pts=prof.pts;const g=cumGain(pts);const R=RACES[S.raceId];
+  g.scale = prof.src==='gpx'?1:R.dplus/Math.max(1,g.up);
+  const total=pts[pts.length-1].km;
+  const geom={W:760,pl:40,pr:10,maxKm:total};
+  const amin=Math.min(...pts.map(p=>p.alt)),amax=Math.max(...pts.map(p=>p.alt));
+  const lo=Math.floor((amin-30)/50)*50,hi=Math.ceil((amax+30)/50)*50;
+  geom.x=k=>40+(760-50)*k/total;geom.y=a=>14+(240-40)*(1-(a-lo)/(hi-lo));
+  bindProfile(pts,geom,g);
+  const r=$('#utbvT');if(r)r.addEventListener('input',()=>{S.utbvTarget=+r.value;save();const y=scrollY;render();scrollTo(0,y)});
+};
+function kvTable(rows){return `<table><tbody>${rows.map(([k,v])=>`<tr><td style="width:40%;color:var(--muted);font-weight:600">${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</tbody></table>`}
+
+/* Parseur GPX */
+function parseGPX(text){
+  const doc=new DOMParser().parseFromString(text,'application/xml');
+  if(doc.querySelector('parsererror')) throw new Error('Fichier GPX illisible');
+  let nodes=[...doc.getElementsByTagName('trkpt')];if(!nodes.length)nodes=[...doc.getElementsByTagName('rtept')];
+  if(nodes.length<2) throw new Error('Aucun point de trace trouvé');
+  const raw=nodes.map(n=>{const e=n.getElementsByTagName('ele')[0];return {lat:+n.getAttribute('lat'),lon:+n.getAttribute('lon'),ele:e?+e.textContent:NaN}}).filter(p=>isFinite(p.lat)&&isFinite(p.lon));
+  if(raw.every(p=>!isFinite(p.ele))) throw new Error('Le GPX ne contient pas d\'altitude');
+  let km=0;const pts=[{km:0,alt:raw[0].ele}];
+  const R=6371;const rad=x=>x*Math.PI/180;
+  for(let i=1;i<raw.length;i++){const a=raw[i-1],b=raw[i];const dLat=rad(b.lat-a.lat),dLon=rad(b.lon-a.lon);
+    const h=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLon/2)**2;km+=2*R*Math.asin(Math.sqrt(h));
+    pts.push({km,alt:isFinite(b.ele)?b.ele:pts[pts.length-1].alt})}
+  /* lissage 5 points puis rééchantillonnage tous les 50 m */
+  const sm=pts.map((p,i)=>{let s=0,n=0;for(let j=Math.max(0,i-2);j<=Math.min(pts.length-1,i+2);j++){s+=pts[j].alt;n++}return {km:p.km,alt:s/n}});
+  const out=[];const step=Math.max(0.05,km/1200);let j=0;
+  for(let k=0;k<=km;k+=step){while(j<sm.length-2&&sm[j+1].km<k)j++;const a=sm[j],b=sm[j+1]||a;const f=b.km>a.km?(k-a.km)/(b.km-a.km):0;out.push([+k.toFixed(3),+(a.alt+(b.alt-a.alt)*Math.max(0,Math.min(1,f))).toFixed(1)])}
+  out.push([+km.toFixed(3),+sm[sm.length-1].alt.toFixed(1)]);
+  return out;
+}
+
+/* =========================================================
+   ZONES & ALLURES
+   ========================================================= */
+function renderZones(){
+  const hr=HR_ZONES.map(z=>{const w=Math.max(8,(Math.min(z.max,200)-Math.max(z.min,100))/(200-100)*100);
+    return `<div class="zrow"><b>${z.z}</b><span class="zl">${z.label}</span><div><div class="zbar" style="width:${w}%;background:${z.color}">${z.z==='Z1'?'< 128':z.z==='Z5'?'192 +':z.min+'-'+z.max}</div></div><span class="num r muted small" style="text-align:right">${Math.round(z.min/ATHLETE.fc_max*100)}-${Math.round(Math.min(z.max,192)/ATHLETE.fc_max*100)} %</span></div>`}).join('');
+  const pace=PACES.map(p=>`<tr><td>${`<span class="badge" style="background:${p.color}1f;color:${shade(p.color)}">${p.z}</span>`}</td><td>${p.label}</td><td class="num"><b>${p.pace}</b> /km</td><td class="num">${p.bpm}</td></tr>`).join('');
+  const pz=PACE_ZONES.map(p=>`<tr><td><b>${p.z}</b></td><td class="num">${p.ms}</td><td class="num">${p.pace}</td></tr>`).join('');
+  const M=RACES.monteynard;
+  return `<div class="grid g2">
+    <div class="card"><h2>Zones FC<span class="r">FC max ${ATHLETE.fc_max}</span></h2>${hr}
+      <div class="small muted" style="margin-top:8px">Trail de la Mine : FC 149 moy, jamais Z4. Drutel : FC 159, pic 172.</div></div>
+    <div class="card"><h2>Allures d'entraînement<span class="r">5 km estimé ${ATHLETE.est_5k}</span></h2>
+      <div class="tw"><table><thead><tr><th>Zone</th><th>Type</th><th>Allure</th><th>BPM</th></tr></thead><tbody>${pace}</tbody></table></div></div>
+  </div>
+  <div class="grid g3" style="margin-top:16px">
+    <div class="card"><h2>Zones d'allure Strava</h2><table><thead><tr><th>Zone</th><th>m/s</th><th>/km</th></tr></thead><tbody>${pz}</tbody></table></div>
+    <div class="card span2"><h2>Prévisions</h2>
+      <div class="tw"><table><thead><tr><th>Événement</th><th class="r">Distance</th><th class="r">D+</th><th>Prédiction</th><th class="r">Modèle TdlM</th><th>Base</th></tr></thead><tbody>
+        <tr><td><b>UTBV</b></td><td class="r">42,5 km</td><td class="r">2173 m</td><td><b>5h10-5h25</b></td><td class="r">${fmtDur(predict(42.53,2173))}</td><td class="small">TdlM extrapolé + marge course A</td></tr>
+        <tr><td><b>Sainté-Lyon</b></td><td class="r">~80 km</td><td class="r">~2200 m</td><td><b>10h30-12h00</b></td><td class="r">${fmtDur(predict(80,2200))}</td><td class="small">Extrapolation Monteynard, premier ultra, nuit</td></tr>
+        <tr><td><b>Semi route</b></td><td class="r">21,1 km</td><td class="r">0 m</td><td><b>1h42-1h48</b></td><td class="r">${fmtDur(predict(21.1,0,'drutel'))}<br><span class="muted small">modèle Drutel</span></td><td class="small">Extrapolation 5K 20:13</td></tr>
+      </tbody></table></div>
+      <h3>Calculateur</h3>
+      <div class="row">
+        <input class="inp" style="max-width:110px" type="number" id="pkm" value="42.5" step="0.5" min="1"> <span class="small muted">km</span>
+        <input class="inp" style="max-width:110px" type="number" id="pdp" value="2173" step="50" min="0"> <span class="small muted">m D+</span>
+        <select class="inp" style="max-width:180px" id="pref">${Object.entries(REFS).map(([k,r])=>`<option value="${k}">${r.label}</option>`).join('')}</select>
+        <b id="pout" class="num" style="font-size:18px"></b>
+      </div>
+      <div class="small muted" style="margin-top:6px">Km-effort = km + D+/100. Temps = référence × (km-effort / km-effort réf)^1,06.</div>
+    </div>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card"><h2>Course de référence · Monteynard<span class="r">${fmtDateFr(M.date)}</span></h2>
+      <div class="stats"><div class="stat"><div class="l">Distance</div><div class="v">${M.km} km</div></div><div class="stat"><div class="l">D+</div><div class="v">${M.dplus} m</div></div><div class="stat"><div class="l">Temps</div><div class="v">${M.time}</div></div><div class="stat"><div class="l">Allure</div><div class="v">${M.pace}/km</div></div><div class="stat"><div class="l">FC</div><div class="v">${M.hr} / ${M.hrmax}</div></div></div>
+      <p class="small">${esc(M.analysis)} Chaussure : ${M.shoe}. ${'3688'} kcal.</p>
+      <div class="row"><button class="btn sm" data-race-go="monteynard">Voir le profil</button><a class="btn sm" href="https://www.strava.com/activities/${M.strava}" target="_blank" rel="noopener">Strava</a></div></div>
+    <div class="card"><h2>Nutrition quotidienne<span class="r">${ATHLETE.weight} kg</span></h2>${kvTable(NUTRITION.daily)}<h3>Pré-course</h3>${kvTable(NUTRITION.pre)}</div>
+  </div>
+  <div class="card" style="margin-top:16px"><h2>Profil athlète</h2>
+    ${kvTable([['Poids',ATHLETE.weight+' kg'],['Lieu',ATHLETE.location],['Pied','Voûte haute · '+ATHLETE.pronation],['Pointure','Standard '+ATHLETE.shoe_size.standard+' · running '+ATHLETE.shoe_size.running+' · La Sportiva '+ATHLETE.shoe_size.la_sportiva],['Strava','ID '+ATHLETE.strava_id]])}
+    <h3>Évolution matériel</h3><ul class="small" style="margin:0;padding-left:18px">${SHOE_NEXT.map(s=>`<li>${esc(s)}</li>`).join('')}</ul></div>`;
+}
+after.zones = ()=>{
+  const upd=()=>{const t=predict(+$('#pkm').value||0,+$('#pdp').value||0,$('#pref').value);$('#pout').textContent='≈ '+fmtDur(t)};
+  ['#pkm','#pdp','#pref'].forEach(s=>$(s).addEventListener('input',upd));upd();
+};
+
+/* =========================================================
+   COACH IA (Claude API + MCP Strava)
+   ========================================================= */
+const MODEL='claude-opus-5-5';
+const SDK_URL='https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@0.131.0/+esm';
+const STRAVA_MCP='https://mcp.strava.com/mcp';
+let sdkPromise=null;
+function getClient(){
+  const key=local.get('ct_api_key');
+  if(!key) throw new Error('Ajoute ta clé API Anthropic dans les réglages du coach.');
+  sdkPromise = sdkPromise || import(SDK_URL);
+  return sdkPromise.then(m=>{const A=m.default||m.Anthropic;return new A({apiKey:key,dangerouslyAllowBrowser:true})});
+}
+function mcpParams(){
+  const tok=local.get('ct_strava_token');
+  if(!tok) return {betas:[],extra:{}};
+  return {betas:['mcp-client-2025-11-20'],extra:{mcp_servers:[{type:'url',url:STRAVA_MCP,name:'strava',authorization_token:tok}],tools:[{type:'mcp_toolset',mcp_server_name:'strava'}]}};
+}
+function systemPrompt(){
+  const cw=currentWeekNum();
+  const weeks=WEEKS.map(w=>getWeek(w.w));
+  const wkLines=weeks.map(w=>`S${w.w} (${ymd(w.start)}) ${w.phase} bloc ${w.block}: planifié ${fmtKm(w.pk)} km/${fmtInt(w.pd)} D+${w.status!=='future'?`, réalisé ${fmtKm(w.rk)} km/${fmtInt(w.rd)} D+`:''}${w.foot.length?`, ${w.foot.length} foot`:''}`).join('\n');
+  const cur=getWeek(cw);
+  const curLines=cur.sessions.map(s=>`${DAYS_L[s.i]} ${ymd(s.date)}: ${TYPES[s.type].label} "${s.title}" ${s.km} km/${s.dplus} D+, FC ${s.bpm}, allure ${s.pace}${s.note?`, note: ${s.note}`:''}${s.ak?` → réalisé ${fmtKm(s.ak)} km/${fmtInt(s.ad)} D+`:''}${s.done?' [fait]':''}`).join('\n');
+  const shoes=shoeList().map(s=>`${s.name}: ${fmtInt(s.km)} km${s.cap?'/'+s.cap:''}, ${s.role}, ${SHOE_STATUS[s.status][0]}. ${s.note}`).join('\n');
+  return `Tu es le coach trail running personnel de Noa Nardone. Tu réponds en français, de façon directe, concrète et chiffrée. Expertise : entraînement trail et ultra, physiologie de l'effort, nutrition sportive, stratégie de course, préparation mentale, prévention des blessures et matériel.
+
+Date du jour : ${ymd(today0())} (semaine S${cw}).
+
+PROFIL
+- 77 kg, Lissieu (Rhône). FC max 192. 5 km estimé 20:13. Voûte plantaire haute, pronateur probable. Pointure 42.5 (Saucony/Brooks 44, La Sportiva 45).
+- Zones FC : Z1 0-128, Z2 129-160, Z3 161-175, Z4 176-191, Z5 192+.
+- Allures : EF 5:39-6:30 (128-155 bpm), AS21 4:52-5:10 (155-170), AS10 4:30-4:52 (170-180), AS5 4:05-4:22 (180-190), VMA 3:40-3:55 (190+).
+
+COURSES DE RÉFÉRENCE
+- Monteynard 16/08/2026 : 39 km, 2122 D+, 5h46, FC 153/175. Pacing excellent, départ prudent, nouvelle référence.
+- Paladru : 55 km, 2000 D+, 7h20. Départ trop ambitieux, explosion musculaire km 30. Leçon : ne plus partir trop vite.
+- Trail de la Mine 19/09/2026 : 28,45 km, 1506 D+, 3h44:33, FC 149/170, couru en contrôle, finish rapide (km 27 4:59). Meilleur indicateur de forme.
+- Trail Drutel 27/09/2026 : 19,17 km, 398 D+, 1h34:07 (4:55/km), FC 159/172. Objectif 1h40 battu.
+
+OBJECTIFS
+- UTBV 10/10/2026, Cublize : 42,53 km, 2173 D+/D-, alt 317-827, boucle. Prédiction 5h10-5h25. Nutrition : 4 gels (km 10, 17, 23, 28 caféiné) + flasque 500 ml isotonique, 50-60 g glucides/h, sodium 500-700 mg/h.
+  Tronçons : ${UTBV_SECTIONS.map(s=>`${s.from}-${s.to} km +${s.up}/-${s.down} allure ${s.pace} : ${s.note}`).join(' | ')}
+  Attention : ces allures totalisent ~5h49, au-dessus de la prédiction.
+- Sainté-Lyon 28/11/2026, départ 23h30 : ~80 km, ~2200 D+, nocturne, mixte sentier/bitume. Prédiction 10h30-12h00. Premier ultra. Nutrition : 500-700 g glucides, gels + isotonique 5 premières heures puis solide tiède (soupe, riz, fromage, coca), bouillons chauds.
+
+NUTRITION QUOTIDIENNE : 2800-3200 kcal en charge, 2400-2600 en affûtage. 55/25/20. Glucides 5-7 g/kg, protéines 1,6-1,8 g/kg. Post-SL 1,2 g/kg glucides + 0,3 g/kg protéines en 30 min. J-3 : 8-10 g/kg glucides, moins de fibres, 2-3 L eau salée.
+
+PLAN (volumes course à pied ; le foot est compté à part)
+${wkLines}
+
+SEMAINE EN COURS S${cw}
+${curLines}
+
+CHAUSSURES
+${shoes}
+
+RÈGLES
+- Base tes réponses sur ces données. Si l'outil Strava est disponible, utilise-le pour les données récentes (activités, streams, zones, matériel) avant de conclure.
+- Donne des consignes actionnables : séance, durée, allure, FC, nutrition.
+- Signale tout risque de blessure ou de surcharge. Pour une douleur persistante, recommande un professionnel de santé.`;
+}
+function renderCoach(){
+  const hasKey=!!local.get('ct_api_key'),hasTok=!!local.get('ct_strava_token');
+  const quick=['Analyse ma semaine en cours','Ma stratégie UTBV tronçon par tronçon','Plan nutrition J-3 à J0 pour l\'UTBV','Quelle séance demain ?','Compare mes 3 dernières sorties longues','Que changer pour la Sainté-Lyon ?'];
+  return `<div class="grid g3">
+    <div class="card span2 chat">
+      <h2>Coach IA<span class="r">${MODEL}${hasTok?' · Strava MCP':''}</span></h2>
+      <div class="msgs" id="msgs">${S.chat.length?S.chat.map(msgHTML).join(''):`<div class="empty">Pose une question sur ton entraînement, l'UTBV, la nutrition ou le matériel.<br>Le coach connaît ton plan, tes zones, tes courses et tes chaussures.</div>`}</div>
+      <div class="chips" style="margin-bottom:8px">${quick.map(q=>`<button class="chip" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+      <form class="compose" id="compose"><textarea id="cin" placeholder="${hasKey?'Écris au coach…':'Ajoute ta clé API dans les réglages'}" rows="1"></textarea><button class="btn pri" id="csend" ${S.chatBusy?'disabled':''}>Envoyer</button></form>
+    </div>
+    <div class="card">
+      <h2>Réglages</h2>
+      <div class="field"><label>Clé API Anthropic</label><input type="password" id="kapi" value="${hasKey?'••••••••':''}" placeholder="sk-ant-…" autocomplete="off"></div>
+      <div class="field"><label>Token OAuth Strava MCP <span class="muted">(facultatif)</span></label><input type="password" id="kstr" value="${hasTok?'••••••••':''}" placeholder="Bearer token pour ${STRAVA_MCP}" autocomplete="off"></div>
+      <div class="row"><button class="btn pri sm" data-act="savekeys">Enregistrer</button><button class="btn sm" data-act="clearkeys">Effacer</button><button class="btn sm" data-act="clearchat">Vider le chat</button></div>
+      <div class="info small" style="margin-top:12px">Les clés restent dans ce navigateur (localStorage) et partent uniquement vers api.anthropic.com. Avec le token Strava, le coach lit tes activités en direct via le connecteur MCP et le bouton Synchro met à jour le tableau de bord.</div>
+      <div class="small muted" style="margin-top:10px">Repli automatique sur un autre modèle si la requête est refusée (server-side fallback).</div>
+    </div>
+  </div>`;
+}
+function mdLite(s){
+  return esc(s).replace(/^### (.*)$/gm,'<h4>$1</h4>').replace(/^## (.*)$/gm,'<h4>$1</h4>').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/^- /gm,'• ');
+}
+function msgText(m){if(typeof m.content==='string')return m.content;return (m.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('')}
+function msgHTML(m){
+  if(m.role==='user') return `<div class="msg u">${esc(msgText(m))}</div>`;
+  if(m.role==='error') return `<div class="msg a err">${esc(m.text)}</div>`;
+  const tools=(m.content||[]).filter(b=>b.type==='mcp_tool_use').map(b=>`<span class="pill o">Strava · ${esc(b.name)}</span>`).join('');
+  return `<div class="msg a">${tools?`<div class="tools">${tools}</div>`:''}${mdLite(msgText(m))}</div>`;
+}
+after.coach = ()=>{
+  const box=$('#msgs');box.scrollTop=box.scrollHeight;
+  const ta=$('#cin');
+  ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('#compose').requestSubmit()}});
+  ta.addEventListener('input',()=>{ta.style.height='auto';ta.style.height=Math.min(160,ta.scrollHeight)+'px'});
+  $('#compose').addEventListener('submit',e=>{e.preventDefault();const v=ta.value.trim();if(v&&!S.chatBusy){ta.value='';sendChat(v)}});
+};
+function apiHistory(){
+  /* N'envoie que les tours user/assistant, contenu assistant renvoyé tel quel */
+  const h=S.chat.filter(m=>m.role==='user'||m.role==='assistant').map(m=>({role:m.role,content:m.content}));
+  while(h.length&&h[0].role!=='user')h.shift();
+  return h;
+}
+async function sendChat(text){
+  S.chat.push({role:'user',content:text});S.chatBusy=true;
+  if(S.tab==='coach')render();
+  const box=()=>$('#msgs');
+  const live=document.createElement('div');live.className='msg a';live.innerHTML='<span class="muted">Le coach réfléchit…</span>';
+  box()&&box().appendChild(live);box()&&(box().scrollTop=box().scrollHeight);
+  try{
+    const client=await getClient();const mp=mcpParams();
+    const stream=client.beta.messages.stream({
+      model:MODEL,max_tokens:16000,system:systemPrompt(),messages:apiHistory(),
+      output_config:{effort:'medium'},
+      betas:[...mp.betas,'server-side-fallback-2026-07-01'],fallbacks:'default',
+      ...mp.extra
+    });
+    let txt='',tools=[];
+    stream.on('streamEvent',ev=>{if(ev.type==='content_block_start'&&ev.content_block&&ev.content_block.type==='mcp_tool_use'){tools.push(ev.content_block.name);paint()}});
+    stream.on('text',d=>{txt+=d;paint()});
+    function paint(){live.innerHTML=(tools.length?`<div class="tools">${tools.map(t=>`<span class="pill o">Strava · ${esc(t)}</span>`).join('')}</div>`:'')+(txt?mdLite(txt):'<span class="muted">Lecture Strava…</span>');const b=box();if(b)b.scrollTop=b.scrollHeight}
+    const final=await stream.finalMessage();
+    if(final.stop_reason==='refusal'){S.chat.pop();S.chat.push({role:'error',text:'Requête refusée par le modèle. Reformule la question.'})}
+    else S.chat.push({role:'assistant',content:final.content});
+  }catch(e){
+    S.chat.pop();
+    S.chat.push({role:'error',text:'Erreur : '+(e&&e.message?e.message:String(e))});
+  }
+  S.chatBusy=false;save();if(S.tab==='coach')render();
+}
+
+/* Synchro Strava via Claude + MCP */
+async function syncStrava(){
+  if(!local.get('ct_api_key')||!local.get('ct_strava_token')){
+    alert('Synchro live : renseigne la clé API Anthropic et le token Strava MCP dans l\'onglet Coach IA. En attendant, le tableau de bord utilise le snapshot Strava du '+fmtDateFr(SNAPSHOT_DATE)+'.');
+    go('coach');return;
+  }
+  const btn=$('[data-act=sync]');if(btn){btn.disabled=true;btn.textContent='Synchro…'}
+  try{
+    const client=await getClient();const mp=mcpParams();
+    const prompt=`Appelle l'outil Strava list_activities avec range_start "2026-08-24T00:00:00", first 100, ordering StartDateLocalAsc. Puis appelle get_gear avec gear_types ["Shoe"].
+Réponds UNIQUEMENT avec un objet JSON, sans texte autour :
+{"activities":[[id,"YYYY-MM-DD","HH:MM",nom,sport_type,distance_km_2_decimales,elevation_gain_m,moving_time_s,gear_id_ou_vide,relative_effort_ou_0]],"gear":[[gear_id,total_distance_km_1_decimale]]}
+Pour sport_type : "Run", "Ride", ou "Foot" si l'activité s'appelle "Foot". Toutes les activités, sans exception.`;
+    const msg=await client.beta.messages.create({model:MODEL,max_tokens:16000,messages:[{role:'user',content:prompt}],output_config:{effort:'low'},betas:[...mp.betas,'server-side-fallback-2026-07-01'],fallbacks:'default',...mp.extra});
+    if(msg.stop_reason==='refusal') throw new Error('requête refusée');
+    const txt=msg.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    const j=JSON.parse(txt.slice(txt.indexOf('{'),txt.lastIndexOf('}')+1));
+    if(!Array.isArray(j.activities)||!j.activities.length) throw new Error('aucune activité reçue');
+    S.activities=j.activities.map(a=>[String(a[0]),a[1],a[2],a[3],a[4],+a[5],+a[6],+a[7],String(a[8]||''),+a[9]||0]);
+    S.shoesKm={};(j.gear||[]).forEach(g=>S.shoesKm[String(g[0])]=+g[1]);
+    S.syncedAt=Date.now();S.syncSource='live';save();renderSync();render();
+  }catch(e){alert('Synchro impossible : '+(e.message||e));if(btn){btn.disabled=false;btn.textContent='Synchro'}}
+}
+
+/* =========================================================
+   ÉVÉNEMENTS GLOBAUX
+   ========================================================= */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-tab],[data-week],[data-goplan],[data-done],[data-act],[data-race],[data-race-go],[data-mv],[data-q]');
+  if(!t)return;
+  if(t.dataset.tab) return go(t.dataset.tab);
+  if(t.dataset.week){S.planWeek=+t.dataset.week;return render()}
+  if(t.dataset.goplan){S.planWeek=+t.dataset.goplan;return go('plan')}
+  if(t.dataset.race){S.raceId=t.dataset.race;return render()}
+  if(t.dataset.raceGo){S.raceId=t.dataset.raceGo;return go('gpx')}
+  if(t.dataset.q){if(!S.chatBusy)sendChat(t.dataset.q);return}
+  if(t.dataset.mv){const [i,d]=t.dataset.mv.split(':').map(Number);return swapSessions(S.planWeek,i,i+d)}
+  if(t.dataset.done){const [w,i]=t.dataset.done.split(':').map(Number);const wk=getWeek(w);const s=wk.sessions[i];const E=ensureEdit(w);
+    E.days[i]=E.days[i]||{};E.days[i].done=!s.done;save();return render()}
+  const a=t.dataset.act;
+  if(a==='edit'){S.editMode=!S.editMode;return render()}
+  if(a==='resetweek'){if(confirm(`Réinitialiser S${S.planWeek} ? Les modifications de cette semaine seront perdues.`)){delete S.edits[S.planWeek];save();render()}return}
+  if(a==='sync') return syncStrava();
+  if(a==='gpx') return $('#gpxIn').click();
+  if(a==='rmgpx'){delete S.uploads[S.raceId];save();return render()}
+  if(a==='savekeys'){const k=$('#kapi').value.trim(),s=$('#kstr').value.trim();if(k&&!k.startsWith('••'))local.set('ct_api_key',k);if(s&&!s.startsWith('••'))local.set('ct_strava_token',s);if(!s)local.set('ct_strava_token','');sdkPromise=null;return render()}
+  if(a==='clearkeys'){local.set('ct_api_key','');local.set('ct_strava_token','');return render()}
+  if(a==='clearchat'){S.chat=[];save();return render()}
+});
+$('#gpxIn').addEventListener('change',async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{const pts=parseGPX(await f.text());S.uploads[S.raceId]={name:f.name,pts};save();render()}
+  catch(err){alert('GPX : '+err.message)}
+});
+document.addEventListener('dragover',e=>{if(S.tab==='gpx'&&e.dataTransfer&&[...e.dataTransfer.types].includes('Files'))e.preventDefault()});
+document.addEventListener('drop',async e=>{
+  if(S.tab!=='gpx'||!e.dataTransfer||!e.dataTransfer.files.length)return;e.preventDefault();
+  const f=e.dataTransfer.files[0];
+  try{const pts=parseGPX(await f.text());S.uploads[S.raceId]={name:f.name,pts};save();render()}catch(err){alert('GPX : '+err.message)}
+});
+
+(async function init(){
+  await loadState();
+  renderTabs();renderSync();render();
+})();
+</script>
+</body>
+</html>
