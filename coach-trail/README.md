@@ -21,7 +21,7 @@ npx http-server coach-trail
 
 ## Données
 
-- Snapshot Strava du 2 octobre 2026 embarqué : activités depuis le 24 août, streams des 3 courses, km chaussures.
+- Snapshot Strava du 5 octobre 2026 embarqué : activités depuis le 24 août, streams des 3 courses, km chaussures.
 - Le foot est exclu du volume course à pied. Il apparaît à part.
 - Bloc B (S42-S48) : proposition de coach, éditable.
 - Profil UTBV schématique tant que le GPX n'est pas importé.
