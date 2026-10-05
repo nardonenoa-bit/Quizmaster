@@ -22,7 +22,7 @@ a{color:var(--orange)}
 .num{font-variant-numeric:tabular-nums}
 
 /* Top bar */
-.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line)}
+.top{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:rgba(255,255,255,.92);backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line)}
 .top-in{max-width:1240px;margin:0 auto;padding:10px 16px 0;display:flex;flex-direction:column;gap:8px}
 .brand{display:flex;align-items:center;gap:12px}
 .logo{width:34px;height:34px;border-radius:10px;background:var(--orange);display:grid;place-items:center;color:#fff;flex:none}
@@ -31,7 +31,7 @@ a{color:var(--orange)}
 .brand .sp{flex:1}
 .sync{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
 .dot{width:8px;height:8px;border-radius:50%;background:#cbd5e1;display:inline-block}
-.dot.ok{background:var(--green)} .dot.live{background:var(--orange);box-shadow:0 0 0 3px rgba(252,76,2,.18)}
+.dot.ok{background:var(--green)} .dot.err{background:var(--red)} .dot.live{background:var(--orange);box-shadow:0 0 0 3px rgba(252,76,2,.18)}
 .tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin:0 -4px}
 .tabs::-webkit-scrollbar{display:none}
 .tab{border:0;background:none;padding:10px 12px 12px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;border-bottom:2.5px solid transparent;font-size:14px}
@@ -210,6 +210,10 @@ td.r,th.r{text-align:right}
 .info{background:#eef4ff;border-radius:10px;padding:10px 12px;color:#1e3a8a;font-size:13px}
 .empty{padding:28px;text-align:center;color:var(--muted)}
 .hide{display:none !important}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom, 0px));transform:translate(-50%,20px);background:#111827;color:#fff;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.2);opacity:0;pointer-events:none;transition:opacity .15s,transform .15s;z-index:60;max-width:calc(100vw - 32px)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.err{background:#b42318}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
 input[type=range]{accent-color:var(--orange);width:100%}
 </style>
 </head>
@@ -507,18 +511,41 @@ function shade(hex){/* version foncée lisible pour le texte */const n=parseInt(
 const round5 = x=>Math.round(x*2)/2;
 const round10 = x=>Math.round(x/10)*10;
 
-/* Stockage : window.storage (artefact Claude) sinon localStorage */
+/* Capacités Claude (artefact publié) : sample, mcp, db, user. Absentes hors de Claude. */
+const CAP = {ready:false, sample:null, mcp:null, db:null, user:null, uid:null, tools:false};
+async function initCaps(){
+  if(!(window.claude && typeof window.claude.use==='function')) {CAP.ready=true;return}
+  const [sample,mcp,db,user] = await Promise.all(['sample','mcp','db','user'].map(n=>window.claude.use(n).catch(()=>null)));
+  Object.assign(CAP,{sample,mcp,db,user});
+  if(sample){try{const l=await sample.limits();CAP.tools=!!(l&&l.tools)}catch(e){}}
+  if(db&&user){try{CAP.uid=await user.id()}catch(e){}}
+  CAP.ready=true;
+}
+function stateDoc(){return CAP.db&&CAP.uid? CAP.db.collection('data/users/'+CAP.uid).doc('coachtrail') : null}
+
+/* Stockage : base privée Claude (db) si disponible, sinon window.storage, sinon localStorage */
+let writeChain = Promise.resolve();
 const store = {
   async get(k){
+    const d=stateDoc();
+    if(d){try{const snap=await d.get();if(snap.exists){const v=snap.data();return v&&typeof v.json==='string'?JSON.parse(v.json):null}return null}catch(e){}}
     try{ if(window.storage&&typeof window.storage.get==='function'){const r=await window.storage.get(k);if(r&&r.value!=null)return JSON.parse(r.value);return null} }catch(e){}
     try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}
   },
   async set(k,v){
     const s=JSON.stringify(v);
+    const d=stateDoc();
+    if(d){writeChain=writeChain.then(()=>d.set({json:s,at:Date.now()})).catch(()=>{try{localStorage.setItem(k,s)}catch(e){}});return writeChain}
     try{ if(window.storage&&typeof window.storage.set==='function'){await window.storage.set(k,s);return} }catch(e){}
     try{localStorage.setItem(k,s)}catch(e){}
   }
 };
+/* Messages courts dans la page (le viewer Claude bloque alert/confirm) */
+function toast(msg,kind=''){
+  let el=document.getElementById('toast');
+  if(!el){el=document.createElement('div');el.id='toast';el.className='toast';document.body.appendChild(el)}
+  el.textContent=msg;el.className='toast show '+kind;clearTimeout(toast.t);toast.t=setTimeout(()=>el.className='toast',5200);
+}
 const local = {get(k){try{return localStorage.getItem(k)||''}catch(e){return ''}},set(k,v){try{v?localStorage.setItem(k,v):localStorage.removeItem(k)}catch(e){}}};
 
 /* Tooltip */
@@ -531,16 +558,22 @@ function hideTip(){tipEl.style.opacity=0}
    ========================================================= */
 const S = {
   tab:'dash', planWeek:null, editMode:false, raceId:'utbv', utbvTarget:325*60,
-  edits:{}, uploads:{}, activities:null, shoesKm:{}, syncedAt:null, syncSource:'snapshot',
-  chat:[], chatBusy:false
+  edits:{}, uploads:{}, activities:null, shoesKm:{}, shoesExtra:[], syncedAt:null, syncSource:'snapshot',
+  chat:[], chatBusy:false, strava:{status:'off',msg:''}
 };
 const STORE_KEY='coachtrail:v1';
 async function loadState(){
   const d = await store.get(STORE_KEY);
-  if(d){Object.assign(S,{edits:d.edits||{},uploads:d.uploads||{},activities:d.activities||null,shoesKm:d.shoesKm||{},syncedAt:d.syncedAt||null,syncSource:d.syncSource||'snapshot',utbvTarget:d.utbvTarget||S.utbvTarget,chat:d.chat||[]})}
+  if(d){Object.assign(S,{edits:d.edits||{},uploads:d.uploads||{},activities:d.activities||null,shoesKm:d.shoesKm||{},shoesExtra:d.shoesExtra||[],syncedAt:d.syncedAt||null,syncSource:d.syncSource||'snapshot',utbvTarget:d.utbvTarget||S.utbvTarget,chat:d.chat||[]})}
 }
 let saveT=null;
-function save(){clearTimeout(saveT);saveT=setTimeout(()=>store.set(STORE_KEY,{edits:S.edits,uploads:S.uploads,activities:S.activities,shoesKm:S.shoesKm,syncedAt:S.syncedAt,syncSource:S.syncSource,utbvTarget:S.utbvTarget,chat:S.chat.slice(-40)}),250)}
+function save(){clearTimeout(saveT);saveT=setTimeout(()=>{
+  let chat=S.chat.slice(-40);
+  const pack=()=>({edits:S.edits,uploads:S.uploads,activities:S.activities,shoesKm:S.shoesKm,shoesExtra:S.shoesExtra,syncedAt:S.syncedAt,syncSource:S.syncSource,utbvTarget:S.utbvTarget,chat});
+  /* limite 256 Ko par document : on raccourcit le chat si besoin */
+  while(chat.length&&JSON.stringify(pack()).length>230000)chat=chat.slice(2);
+  store.set(STORE_KEY,pack());
+},400)}
 
 function activities(){
   const src = S.activities || ACTIVITIES_SNAPSHOT;
@@ -644,9 +677,10 @@ function renderTabs(){
   $('#tabs').innerHTML = TABS.map(([k,l])=>`<button class="tab ${S.tab===k?'on':''}" data-tab="${k}">${l}</button>`).join('');
 }
 function renderSync(){
-  const src = S.syncSource==='live' ? `<span class="dot live"></span><span class="lbl">Strava synchro ${S.syncedAt?new Date(S.syncedAt).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>`
-    : `<span class="dot ok"></span><span class="lbl">Données Strava du ${fmtDateFr(SNAPSHOT_DATE)}</span>`;
-  $('#sync').innerHTML = `${src} <button class="btn sm" data-act="sync" title="Synchroniser via Coach IA + Strava MCP">Synchro</button>`;
+  const live=S.syncSource==='live'&&S.strava.status!=='error';
+  const dot=S.strava.status==='error'?'err':S.strava.status==='loading'?'':live?'live':'ok';
+  const lab=S.strava.status==='error'?S.strava.msg:live?`Strava live${S.syncedAt?' · '+new Date(S.syncedAt).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}`:S.strava.status==='loading'?'Strava : chargement':`Données Strava du ${fmtDateFr(SNAPSHOT_DATE)}`;
+  $('#sync').innerHTML = `<span class="dot ${dot}"></span><span class="lbl">${esc(lab)}</span> <button class="btn sm" data-act="sync" title="Recharger les activités Strava">Synchro</button>`;
 }
 function go(tab){S.tab=tab;renderTabs();render();window.scrollTo({top:0})}
 function render(){
@@ -779,7 +813,7 @@ function renderDash(){
   </div>`;
 }
 after.dash = ()=>bindTips($('#app'));
-function shoeList(){return SHOES_BASE.map(s=>({...s,km:S.shoesKm[s.id]!=null?S.shoesKm[s.id]:s.km}))}
+function shoeList(){return SHOES_BASE.map(s=>({...s,km:S.shoesKm[s.id]!=null?S.shoesKm[s.id]:s.km})).concat(S.shoesExtra||[])}
 function shoeRow(s){
   const st=SHOE_STATUS[s.status];const pct=s.cap?Math.min(100,s.km/s.cap*100):0;
   const col = !s.cap?'#9ca3af': pct>=95?'#dc2626': pct>=80?'#d97706':'#16a34a';
@@ -1253,22 +1287,32 @@ RÈGLES
 - Signale tout risque de blessure ou de surcharge. Pour une douleur persistante, recommande un professionnel de santé.`;
 }
 function renderCoach(){
+  const claudeMode=!!CAP.sample;
   const hasKey=!!local.get('ct_api_key'),hasTok=!!local.get('ct_strava_token');
+  const ready=claudeMode||hasKey;
+  const stravaOn=claudeMode?(!!CAP.mcp&&CAP.tools):hasTok;
   const quick=['Analyse ma semaine en cours','Ma stratégie UTBV tronçon par tronçon','Plan nutrition J-3 à J0 pour l\'UTBV','Quelle séance demain ?','Compare mes 3 dernières sorties longues','Que changer pour la Sainté-Lyon ?'];
+  const settings = claudeMode ? `
+      <div class="info small">Le coach utilise ton compte Claude. Aucune clé API. La première question demande ton accord.</div>
+      <h3>Strava</h3>
+      <div class="small">${CAP.mcp?(CAP.tools?'Le coach peut lire tes activités Strava via ton connecteur Strava.':'Le tableau de bord lit Strava via ton connecteur. Le coach utilise les données affichées.'):'Connecteur Strava non disponible sur cette vue. Le coach utilise les données affichées.'}</div>
+      <div class="small muted" style="margin-top:6px">État : ${esc(stravaLabel())}</div>
+      <div class="row" style="margin-top:12px"><button class="btn sm" data-act="clearchat">Vider le chat</button></div>`
+    : `
+      <div class="warn small" style="margin-bottom:12px">Ouvre cette page dans Claude pour utiliser le coach sans clé API. Ici, hors de Claude, il faut une clé API Anthropic.</div>
+      <div class="field"><label for="kapi">Clé API Anthropic</label><input type="password" id="kapi" value="${hasKey?'••••••••':''}" placeholder="sk-ant-api…" autocomplete="off"></div>
+      <div class="field"><label for="kstr">Token OAuth Strava MCP <span class="muted">(facultatif)</span></label><input type="password" id="kstr" value="${hasTok?'••••••••':''}" placeholder="Bearer token pour ${STRAVA_MCP}" autocomplete="off"></div>
+      <div class="row"><button class="btn pri sm" data-act="savekeys">Enregistrer</button><button class="btn sm" data-act="clearkeys">Effacer</button><button class="btn sm" data-act="clearchat">Vider le chat</button></div>
+      <div class="info small" style="margin-top:12px">Les clés restent dans ce navigateur et partent uniquement vers api.anthropic.com.</div>`;
   return `<div class="grid g3">
     <div class="card span2 chat">
-      <h2>Coach IA<span class="r">${MODEL}${hasTok?' · Strava MCP':''}</span></h2>
+      <h2>Coach IA<span class="r">${claudeMode?'Compte Claude':MODEL}${stravaOn?' · Strava':''}</span></h2>
       <div class="msgs" id="msgs">${S.chat.length?S.chat.map(msgHTML).join(''):`<div class="empty">Pose une question sur ton entraînement, l'UTBV, la nutrition ou le matériel.<br>Le coach connaît ton plan, tes zones, tes courses et tes chaussures.</div>`}</div>
-      <div class="chips" style="margin-bottom:8px">${quick.map(q=>`<button class="chip" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>
-      <form class="compose" id="compose"><textarea id="cin" placeholder="${hasKey?'Écris au coach…':'Ajoute ta clé API dans les réglages'}" rows="1"></textarea><button class="btn pri" id="csend" ${S.chatBusy?'disabled':''}>Envoyer</button></form>
+      <div class="chips" style="margin-bottom:8px">${quick.map(q=>`<button class="chip" data-q="${esc(q)}" ${ready?'':'disabled'}>${esc(q)}</button>`).join('')}</div>
+      <form class="compose" id="compose"><textarea id="cin" placeholder="${ready?'Écris au coach…':'Ajoute ta clé API dans les réglages'}" rows="1"></textarea>${S.chatBusy?`<button type="button" class="btn" data-act="stopchat">Stop</button>`:`<button class="btn pri" id="csend" ${ready?'':'disabled'}>Envoyer</button>`}</form>
     </div>
     <div class="card">
-      <h2>Réglages</h2>
-      <div class="field"><label>Clé API Anthropic</label><input type="password" id="kapi" value="${hasKey?'••••••••':''}" placeholder="sk-ant-…" autocomplete="off"></div>
-      <div class="field"><label>Token OAuth Strava MCP <span class="muted">(facultatif)</span></label><input type="password" id="kstr" value="${hasTok?'••••••••':''}" placeholder="Bearer token pour ${STRAVA_MCP}" autocomplete="off"></div>
-      <div class="row"><button class="btn pri sm" data-act="savekeys">Enregistrer</button><button class="btn sm" data-act="clearkeys">Effacer</button><button class="btn sm" data-act="clearchat">Vider le chat</button></div>
-      <div class="info small" style="margin-top:12px">Les clés restent dans ce navigateur (localStorage) et partent uniquement vers api.anthropic.com. Avec le token Strava, le coach lit tes activités en direct via le connecteur MCP et le bouton Synchro met à jour le tableau de bord.</div>
-      <div class="small muted" style="margin-top:10px">Repli automatique sur un autre modèle si la requête est refusée (server-side fallback).</div>
+      <h2>Réglages</h2>${settings}
     </div>
   </div>`;
 }
@@ -1276,11 +1320,12 @@ function mdLite(s){
   return esc(s).replace(/^### (.*)$/gm,'<h4>$1</h4>').replace(/^## (.*)$/gm,'<h4>$1</h4>').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/^- /gm,'• ');
 }
 function msgText(m){if(typeof m.content==='string')return m.content;return (m.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('')}
+const toolChips = names=>names.length?`<div class="tools">${names.map(t=>`<span class="pill o">Strava · ${esc(t)}</span>`).join('')}</div>`:'';
 function msgHTML(m){
   if(m.role==='user') return `<div class="msg u">${esc(msgText(m))}</div>`;
   if(m.role==='error') return `<div class="msg a err">${esc(m.text)}</div>`;
-  const tools=(m.content||[]).filter(b=>b.type==='mcp_tool_use').map(b=>`<span class="pill o">Strava · ${esc(b.name)}</span>`).join('');
-  return `<div class="msg a">${tools?`<div class="tools">${tools}</div>`:''}${mdLite(msgText(m))}</div>`;
+  const names=(m.tools||[]).concat(Array.isArray(m.content)?m.content.filter(b=>b.type==='mcp_tool_use').map(b=>b.name):[]);
+  return `<div class="msg a">${toolChips(names)}${mdLite(msgText(m))}</div>`;
 }
 after.coach = ()=>{
   const box=$('#msgs');box.scrollTop=box.scrollHeight;
@@ -1295,39 +1340,165 @@ function apiHistory(){
   while(h.length&&h[0].role!=='user')h.shift();
   return h;
 }
+let chatCtl=null;
 async function sendChat(text){
   S.chat.push({role:'user',content:text});S.chatBusy=true;
   if(S.tab==='coach')render();
   const box=()=>$('#msgs');
   const live=document.createElement('div');live.className='msg a';live.innerHTML='<span class="muted">Le coach réfléchit…</span>';
   box()&&box().appendChild(live);box()&&(box().scrollTop=box().scrollHeight);
-  try{
-    const client=await getClient();const mp=mcpParams();
-    const stream=client.beta.messages.stream({
-      model:MODEL,max_tokens:16000,system:systemPrompt(),messages:apiHistory(),
-      output_config:{effort:'medium'},
-      betas:[...mp.betas,'server-side-fallback-2026-07-01'],fallbacks:'default',
-      ...mp.extra
-    });
-    let txt='',tools=[];
-    stream.on('streamEvent',ev=>{if(ev.type==='content_block_start'&&ev.content_block&&ev.content_block.type==='mcp_tool_use'){tools.push(ev.content_block.name);paint()}});
-    stream.on('text',d=>{txt+=d;paint()});
-    function paint(){live.innerHTML=(tools.length?`<div class="tools">${tools.map(t=>`<span class="pill o">Strava · ${esc(t)}</span>`).join('')}</div>`:'')+(txt?mdLite(txt):'<span class="muted">Lecture Strava…</span>');const b=box();if(b)b.scrollTop=b.scrollHeight}
-    const final=await stream.finalMessage();
-    if(final.stop_reason==='refusal'){S.chat.pop();S.chat.push({role:'error',text:'Requête refusée par le modèle. Reformule la question.'})}
-    else S.chat.push({role:'assistant',content:final.content});
-  }catch(e){
-    S.chat.pop();
-    S.chat.push({role:'error',text:'Erreur : '+(e&&e.message?e.message:String(e))});
+  let txt='';const tools=[];
+  const paint=()=>{live.innerHTML=toolChips(tools)+(txt?mdLite(txt):'<span class="muted">Lecture Strava…</span>');const b=box();if(b)b.scrollTop=b.scrollHeight};
+  if(CAP.sample){
+    chatCtl=new AbortController();
+    try{
+      const res=await CAP.sample(sampleTurns(),sampleOpts(chatCtl.signal,t=>{txt=t;paint()},n=>{tools.push(n);paint()}));
+      S.chat.push({role:'assistant',content:res.text+(res.truncated?'\n\n(réponse coupée, demande plus court)':''),tools});
+    }catch(e){
+      const code=e&&e.code;
+      if(e&&e.text)S.chat.push({role:'assistant',content:e.text,tools});
+      if(code!=='cancelled')S.chat.push({role:'error',text:sampleErrorCopy(code)});
+    }
+    chatCtl=null;
+  } else {
+    try{
+      const client=await getClient();const mp=mcpParams();
+      const stream=client.beta.messages.stream({
+        model:MODEL,max_tokens:16000,system:systemPrompt(),messages:apiHistory(),
+        output_config:{effort:'medium'},
+        betas:[...mp.betas,'server-side-fallback-2026-07-01'],fallbacks:'default',
+        ...mp.extra
+      });
+      stream.on('streamEvent',ev=>{if(ev.type==='content_block_start'&&ev.content_block&&ev.content_block.type==='mcp_tool_use'){tools.push(ev.content_block.name);paint()}});
+      stream.on('text',d=>{txt+=d;paint()});
+      chatCtl={abort:()=>stream.abort()};
+      const final=await stream.finalMessage();
+      if(final.stop_reason==='refusal'){S.chat.pop();S.chat.push({role:'error',text:'Requête refusée par le modèle. Reformule la question.'})}
+      else S.chat.push({role:'assistant',content:final.content});
+    }catch(e){
+      S.chat.pop();
+      S.chat.push({role:'error',text:'Erreur : '+(e&&e.message?e.message:String(e))});
+    }
+    chatCtl=null;
   }
   S.chatBusy=false;save();if(S.tab==='coach')render();
 }
+/* Le chat via le compte Claude : consignes en tête, puis les derniers échanges */
+function sampleTurns(){
+  const turns=S.chat.filter(m=>(m.role==='user'||m.role==='assistant')&&msgText(m).trim()).slice(-20).map(m=>({role:m.role,content:msgText(m)}));
+  while(turns.length&&turns[0].role!=='user')turns.shift();
+  const intro=systemPrompt()+'\n\nTu parles directement à Noa dans le chat du tableau de bord. Réponds à son dernier message.';
+  return [{role:'user',content:intro},...turns];
+}
+function sampleOpts(signal,onText,onTool){
+  const o={signal,modelTier:'default',onText:({text})=>onText(text)};
+  if(CAP.tools&&CAP.mcp) o.tools=stravaTools(onTool); else o.cache=false;
+  return o;
+}
+function sampleErrorCopy(code){
+  return ({
+    not_granted:'Le coach n\'est pas autorisé sur cette page. Autorise-le dans le menu Permissions de l\'artefact.',
+    sampling_disabled:'Claude n\'est pas disponible pour ce compte.',
+    rate_limited:'Limite d\'utilisation atteinte. Réessaie dans quelques minutes.',
+    session_expired:'Session expirée. Reconnecte-toi à Claude.',
+    refused:'Claude a refusé cette demande. Reformule la question.',
+    empty_completion:'Réponse vide. Pose une question plus précise.',
+    prompt_too_large:'Conversation trop longue. Vide le chat et recommence.'
+  })[code]||'Le coach n\'a pas pu répondre. Réessaie.';
+}
+/* Outils Strava offerts au coach : appels du connecteur Strava du lecteur */
+function stravaTools(onTool){
+  return [
+    {name:'strava_activites',
+     description:'Liste les activités Strava de Noa entre deux dates (heure locale). Renvoie [id, date, heure, nom, type, km, D+, temps en mouvement s, gear_id, effort relatif]. Utilise-le pour toute question sur des sorties récentes.',
+     inputSchema:{type:'object',properties:{range_start:{type:'string',description:'ISO local, ex. 2026-09-01T00:00:00'},range_end:{type:'string',description:'ISO local, ex. 2026-09-30T23:59:59'},first:{type:'integer',description:'Nombre max, 100 au plus'}}},
+     async execute(input,ctx){onTool('list_activities');const q={first:Math.min(100,Math.max(1,Number(input.first)||50)),ordering:'StartDateLocalDesc'};
+       if(input.range_start)q.range_start=String(input.range_start);if(input.range_end)q.range_end=String(input.range_end);
+       const r=await CAP.mcp.callTool(STRAVA,'list_activities',q,{signal:ctx.signal});const p=r.payload||{};return {activities:mapActs(p),has_next_page:!!p.has_next_page}}},
+    {name:'strava_performance',
+     description:'Détail d\'une activité Strava par id : FC moyenne et max, calories, meilleurs efforts, tours au km (temps, D+, FC). Utilise-le pour analyser une sortie précise.',
+     inputSchema:{type:'object',properties:{activity_id:{type:'string'}},required:['activity_id']},
+     async execute(input,ctx){onTool('get_activity_performance');const r=await CAP.mcp.callTool(STRAVA,'get_activity_performance',{activity_id:String(input.activity_id)},{signal:ctx.signal});const p=r.payload||{};
+       return {average_heartrate:p.average_heartrate,max_heartrate:p.max_heartrate,calories:p.calories,average_cadence:p.average_cadence,
+         best_efforts:(p.best_efforts||[]).map(b=>({effort:b.display_text,seconds:b.value})),
+         laps:(p.laps||[]).slice(0,80).map(l=>({km:+(l.distance/1000).toFixed(2),s:l.moving_time,dplus:l.elevation_gain,hr:l.avg_hr&&Math.round(l.avg_hr),hrmax:l.max_hr}))}}}
+  ];
+}
 
-/* Synchro Strava via Claude + MCP */
+/* =========================================================
+   STRAVA : connecteur du lecteur (artefact) ou clé API (hors Claude)
+   ========================================================= */
+const STRAVA='Strava';
+const LIST_INPUT={range_start:'2026-08-24T00:00:00',first:100,ordering:'StartDateLocalAsc'};
+function mapActs(p){
+  return ((p&&p.activities)||[]).map(a=>{const s=a.summary||{};const st=String(a.start_local||'');const nm=String(a.name||'');const sp=String(a.sport_type||'');
+    const type=/^foot$/i.test(nm.trim())?'Foot':/Run$/.test(sp)?'Run':/Ride$/.test(sp)?'Ride':sp||'Autre';
+    return [String(a.id),st.slice(0,10),st.slice(11,16),nm,type,+((+s.distance||0)/1000).toFixed(2),Math.round(+s.elevation_gain||0),Math.round(+s.moving_time||0),String(a.gear_id||''),+s.relative_effort||0]});
+}
+function stravaLabel(){
+  const st=S.strava;
+  if(st.status==='live')return 'Strava live';
+  if(st.status==='loading')return 'Strava : chargement';
+  if(st.status==='error')return st.msg;
+  return S.syncSource==='live'?'Strava synchro':'Snapshot du '+fmtDateFr(SNAPSHOT_DATE);
+}
+function stravaErrorCopy(err){
+  const c=err&&err.code;
+  if(c==='server_not_connected'||c==='selection_required'||c==='server_not_found')return 'Ajoute le connecteur Strava dans claude.ai, Réglages, Connecteurs.';
+  if(c==='needs_reauth')return 'Reconnecte Strava dans claude.ai, Réglages, Connecteurs.';
+  if(c==='not_in_manifest'||c==='not_granted'||c==='consent_required')return 'Strava non autorisé pour cette page. Snapshot affiché.';
+  if(c==='blocked_by_policy'||c==='approval_required')return 'Strava bloqué par la politique de ton organisation.';
+  if(c==='capability_disabled'||c==='capability_removed')return 'Strava indisponible sur cette vue. Snapshot affiché.';
+  if(c==='tool_error')return 'Strava a renvoyé une erreur : '+(err.message||'');
+  return 'Strava ne répond pas. Dernières données gardées.';
+}
+const DENIALS=['needs_reauth','server_not_connected','blocked_by_policy','approval_required','not_in_manifest','not_granted','consent_required','selection_required'];
+function onStravaError(err){
+  S.strava={status:'error',msg:stravaErrorCopy(err)};
+  if(err&&DENIALS.includes(err.code)&&S.syncSource==='live'){S.activities=null;S.shoesKm={};S.shoesExtra=[];S.syncSource='snapshot';save()}
+  renderSync();softRender();
+}
+let moreCursor=null;
+async function fetchMore(cursor){
+  if(!cursor||cursor===moreCursor)return;moreCursor=cursor;
+  try{
+    const r=await CAP.mcp.callTool(STRAVA,'list_activities',{...LIST_INPUT,after:cursor});
+    const more=mapActs(r.payload);const ids=new Set((S.activities||[]).map(a=>a[0]));
+    S.activities=(S.activities||[]).concat(more.filter(a=>!ids.has(a[0])));save();softRender();
+    if(r.payload&&r.payload.has_next_page)fetchMore(r.payload.end_cursor);
+  }catch(e){onStravaError(e)}
+}
+function startStrava(){
+  if(!CAP.mcp)return;
+  S.strava={status:'loading',msg:''};renderSync();
+  CAP.mcp.watchTool(STRAVA,'list_activities',LIST_INPUT,ev=>{
+    if(ev.type==='error')return onStravaError(ev.error);
+    const p=ev.result.payload;const acts=mapActs(p);
+    if(acts.length){S.activities=acts;S.syncSource='live';S.syncedAt=ev.result.cache?ev.result.cache.storedAt:Date.now();moreCursor=null}
+    S.strava={status:'live',msg:''};save();renderSync();softRender();
+    if(p&&p.has_next_page)fetchMore(p.end_cursor);
+  },{refetchInterval:15*60*1000});
+  CAP.mcp.watchTool(STRAVA,'get_gear',{gear_types:['Shoe']},ev=>{
+    if(ev.type==='error')return onStravaError(ev.error);
+    const g=(ev.result.payload&&ev.result.payload.gear)||[];
+    const km={},extra=[];
+    g.forEach(x=>{const id=String(x.gear_id&&x.gear_id.id||'');if(!id)return;km[id]=+((+x.total_distance||0)/1000).toFixed(1);
+      if(!SHOES_BASE.some(s=>s.id===id)&&!x.retired)extra.push({id,name:[x.brand,x.model_name].filter(Boolean).join(' ')||x.name||'Chaussure',km:km[id],cap:800,role:'Ajoutée sur Strava',drop:null,weight:null,status:'active',note:''})});
+    S.shoesKm=km;S.shoesExtra=extra;save();softRender();
+  });
+}
+/* Pas de rendu pendant une saisie : on évite d'effacer ce que tape le lecteur */
+function softRender(){const a=document.activeElement;if(a&&$('#app').contains(a)&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(S.chatBusy&&S.tab==='coach')return;render()}
+
 async function syncStrava(){
+  if(CAP.mcp){
+    S.strava={status:'loading',msg:''};renderSync();
+    try{await CAP.mcp.invalidate(STRAVA)}catch(e){startStrava()}
+    toast('Synchro Strava lancée');return;
+  }
   if(!local.get('ct_api_key')||!local.get('ct_strava_token')){
-    alert('Synchro live : renseigne la clé API Anthropic et le token Strava MCP dans l\'onglet Coach IA. En attendant, le tableau de bord utilise le snapshot Strava du '+fmtDateFr(SNAPSHOT_DATE)+'.');
-    go('coach');return;
+    toast('Ouvre la page dans Claude pour la synchro Strava. Snapshot du '+fmtDateFr(SNAPSHOT_DATE)+' affiché.');
+    return;
   }
   const btn=$('[data-act=sync]');if(btn){btn.disabled=true;btn.textContent='Synchro…'}
   try{
@@ -1343,13 +1514,14 @@ Pour sport_type : "Run", "Ride", ou "Foot" si l'activité s'appelle "Foot". Tout
     if(!Array.isArray(j.activities)||!j.activities.length) throw new Error('aucune activité reçue');
     S.activities=j.activities.map(a=>[String(a[0]),a[1],a[2],a[3],a[4],+a[5],+a[6],+a[7],String(a[8]||''),+a[9]||0]);
     S.shoesKm={};(j.gear||[]).forEach(g=>S.shoesKm[String(g[0])]=+g[1]);
-    S.syncedAt=Date.now();S.syncSource='live';save();renderSync();render();
-  }catch(e){alert('Synchro impossible : '+(e.message||e));if(btn){btn.disabled=false;btn.textContent='Synchro'}}
+    S.syncedAt=Date.now();S.syncSource='live';save();renderSync();render();toast('Strava synchronisé');
+  }catch(e){toast('Synchro impossible : '+(e.message||e),'err');renderSync()}
 }
 
 /* =========================================================
    ÉVÉNEMENTS GLOBAUX
    ========================================================= */
+let resetArmed=null;
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-tab],[data-week],[data-goplan],[data-done],[data-act],[data-race],[data-race-go],[data-mv],[data-q]');
   if(!t)return;
@@ -1358,35 +1530,41 @@ document.addEventListener('click',e=>{
   if(t.dataset.goplan){S.planWeek=+t.dataset.goplan;return go('plan')}
   if(t.dataset.race){S.raceId=t.dataset.race;return render()}
   if(t.dataset.raceGo){S.raceId=t.dataset.raceGo;return go('gpx')}
-  if(t.dataset.q){if(!S.chatBusy)sendChat(t.dataset.q);return}
+  if(t.dataset.q){if(!S.chatBusy&&!t.disabled)sendChat(t.dataset.q);return}
   if(t.dataset.mv){const [i,d]=t.dataset.mv.split(':').map(Number);return swapSessions(S.planWeek,i,i+d)}
   if(t.dataset.done){const [w,i]=t.dataset.done.split(':').map(Number);const wk=getWeek(w);const s=wk.sessions[i];const E=ensureEdit(w);
     E.days[i]=E.days[i]||{};E.days[i].done=!s.done;save();return render()}
   const a=t.dataset.act;
   if(a==='edit'){S.editMode=!S.editMode;return render()}
-  if(a==='resetweek'){if(confirm(`Réinitialiser S${S.planWeek} ? Les modifications de cette semaine seront perdues.`)){delete S.edits[S.planWeek];save();render()}return}
+  if(a==='resetweek'){
+    /* confirmation en deux clics : le viewer bloque les boîtes de dialogue */
+    if(resetArmed!==S.planWeek){resetArmed=S.planWeek;t.textContent=`Confirmer la réinitialisation de S${S.planWeek}`;t.classList.add('pri');setTimeout(()=>{if(resetArmed===S.planWeek){resetArmed=null;softRender()}},4000);return}
+    resetArmed=null;delete S.edits[S.planWeek];save();toast(`S${S.planWeek} réinitialisée`);return render()}
   if(a==='sync') return syncStrava();
+  if(a==='stopchat'){if(chatCtl)chatCtl.abort();return}
   if(a==='gpx') return $('#gpxIn').click();
   if(a==='rmgpx'){delete S.uploads[S.raceId];save();return render()}
-  if(a==='savekeys'){const k=$('#kapi').value.trim(),s=$('#kstr').value.trim();if(k&&!k.startsWith('••'))local.set('ct_api_key',k);if(s&&!s.startsWith('••'))local.set('ct_strava_token',s);if(!s)local.set('ct_strava_token','');sdkPromise=null;return render()}
+  if(a==='savekeys'){const k=$('#kapi').value.trim(),s=$('#kstr').value.trim();if(k&&!k.startsWith('••'))local.set('ct_api_key',k);if(s&&!s.startsWith('••'))local.set('ct_strava_token',s);if(!s)local.set('ct_strava_token','');sdkPromise=null;toast('Réglages enregistrés');return render()}
   if(a==='clearkeys'){local.set('ct_api_key','');local.set('ct_strava_token','');return render()}
   if(a==='clearchat'){S.chat=[];save();return render()}
 });
-$('#gpxIn').addEventListener('change',async e=>{
-  const f=e.target.files[0];e.target.value='';if(!f)return;
-  try{const pts=parseGPX(await f.text());S.uploads[S.raceId]={name:f.name,pts};save();render()}
-  catch(err){alert('GPX : '+err.message)}
-});
+async function importGPX(f){
+  try{const pts=parseGPX(await f.text());S.uploads[S.raceId]={name:f.name,pts};save();render();toast('GPX importé : '+f.name)}
+  catch(err){toast('GPX : '+err.message,'err')}
+}
+$('#gpxIn').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(f)importGPX(f)});
 document.addEventListener('dragover',e=>{if(S.tab==='gpx'&&e.dataTransfer&&[...e.dataTransfer.types].includes('Files'))e.preventDefault()});
-document.addEventListener('drop',async e=>{
+document.addEventListener('drop',e=>{
   if(S.tab!=='gpx'||!e.dataTransfer||!e.dataTransfer.files.length)return;e.preventDefault();
-  const f=e.dataTransfer.files[0];
-  try{const pts=parseGPX(await f.text());S.uploads[S.raceId]={name:f.name,pts};save();render()}catch(err){alert('GPX : '+err.message)}
+  importGPX(e.dataTransfer.files[0]);
 });
 
 (async function init(){
-  await loadState();
   renderTabs();renderSync();render();
+  await initCaps();
+  await loadState();
+  renderSync();render();
+  startStrava();
 })();
 </script>
 </body>

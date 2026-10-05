@@ -28,15 +28,13 @@ npx http-server coach-trail
 
 ## Coach IA et synchro Strava
 
-Dans l'onglet Coach IA :
+**Dans Claude (artefact publié) : aucune clé API.**
+- Le coach passe par le compte Claude du lecteur (capacité `sample`).
+- Strava passe par le connecteur Strava de claude.ai (capacité `mcp`). Activités et km chaussures se mettent à jour seuls.
+- Le coach peut lire les activités et le détail d'une sortie via ce connecteur.
 
-1. Clé API Anthropic (obligatoire pour le chat).
-2. Token OAuth du serveur MCP Strava `https://mcp.strava.com/mcp` (facultatif).
-
-Avec le token, le coach interroge Strava en direct via le connecteur MCP. Le bouton **Synchro** recharge activités et km chaussures.
-
-Les clés restent dans le `localStorage` du navigateur. Elles partent uniquement vers `api.anthropic.com`. Ne pas publier la page avec une clé enregistrée.
+**Hors de Claude (fichier ouvert localement) :** clé API Anthropic dans l'onglet Coach IA. Token Strava MCP facultatif. Les clés restent dans le `localStorage` et partent uniquement vers `api.anthropic.com`.
 
 ## Persistance
 
-Éditions du plan, GPX importés, synchro et chat : `window.storage` si disponible (artefact Claude), sinon `localStorage`.
+Éditions du plan, GPX importés, synchro et chat : base privée de l'artefact (`db`, propre à chaque lecteur) dans Claude. Sinon `window.storage`, puis `localStorage`.
