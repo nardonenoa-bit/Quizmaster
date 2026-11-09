@@ -300,7 +300,7 @@ const RACES = {
     analysis:'Objectif 1h40 battu de 6 min sur 19,2 km mesurés. Boucles quasi identiques, FC 159 moy, max 172 : jamais au-dessus de la zone cible 160-174. Allure 4:55/km tenue jusqu\'au bout.'},
   utbv:{name:'Ultra Trail du Beaujolais Vert',short:'UTBV',date:'2026-10-10',km:42.53,dplus:2173,dminus:2173,altmin:317,altmax:827,loc:'Cublize, Beaujolais',
     prediction:'5h10 — 5h25', nutrition:'4 gels (km 10, 17, 23, 28 caféiné) + flasque 500 ml isotonique'},
-  saintelyon:{name:'Sainté-Lyon',short:'Sainté-Lyon',date:'2026-11-28',start:'23h30',km:80,dplus:2200,prediction:'10h30 — 12h00',
+  saintelyon:{name:'Sainté-Lyon',short:'Sainté-Lyon',date:'2026-11-28',start:'23h30',km:80.65,dplus:2209,dminus:2537,altmin:164,altmax:926,loc:'Saint-Étienne → Lyon',prediction:'10h30 — 12h00',
     notes:'Premier ultra nocturne. Terrain mixte sentier/bitume. Gestion du froid et de la fatigue nocturne.'}
 };
 
@@ -317,6 +317,17 @@ const UTBV_SECTIONS = [
 ];
 /* Profil schématique UTBV (points clés du brief). Remplacé par le GPX s'il est importé. */
 const UTBV_SCHEMA = [[0,450],[2.5,400],[5,564],[7,640],[9,827],[10,766],[12,700],[15,595],[17,317],[20,502],[22,560],[25,474],[28,620],[30,594],[33,809],[35,695],[38,640],[40,605],[42.53,450]];
+/* Sainté-Lyon 2026 : trace officielle (GPX Asics SaintéLyon, 2235 points), rééchantillonnée tous les 200 m.
+   D+ et D- calculés sur la trace brute avec un filtre de 4 m. */
+const SL_GPX = {file:'Saint_Lyon_80km_-_Asics_Saint_Lyon.gpx',up:2209,down:2537,pts:[[0.0,495],[0.2,494],[0.4,498],[0.6,501],[0.8,502],[1.0,498],[1.2,494],[1.4,493],[1.6,491],[1.8,491],[2.0,498],[2.2,502],[2.4,507],[2.6,514],[2.8,515],[3.0,512],[3.2,514],[3.4,522],[3.6,530],[3.8,540],[4.0,545],[4.2,559],[4.4,563],[4.6,578],[4.8,593],[5.0,609],[5.2,624],[5.4,628],[5.6,631],[5.8,618],[6.0,619],[6.2,602],[6.4,596],[6.6,591],[6.8,587],[7.0,586],[7.2,575],[7.4,562],[7.6,537],[7.8,516],[8.0,511],[8.2,513],[8.4,520],[8.6,524],[8.8,530],[9.0,509],[9.2,488],[9.4,465],[9.6,470],[9.8,472],[10.0,481],[10.2,512],[10.4,540],[10.6,558],[10.8,585],[11.0,601],[11.2,617],[11.4,626],[11.6,642],[11.8,657],[12.0,683],[12.2,700],[12.4,702],[12.6,713],[12.8,731],[13.0,730],[13.2,731],[13.4,744],[13.6,766],[13.8,798],[14.0,791],[14.2,776],[14.4,771],[14.6,754],[14.8,750],[15.0,751],[15.2,734],[15.4,727],[15.6,733],[15.8,744],[16.0,759],[16.2,757],[16.4,744],[16.6,734],[16.8,733],[17.0,743],[17.2,759],[17.4,781],[17.6,767],[17.8,760],[18.0,759],[18.2,768],[18.4,768],[18.6,785],[18.8,821],[19.0,839],[19.2,835],[19.4,832],[19.6,805],[19.8,771],[20.0,735],[20.2,716],[20.4,741],[20.6,775],[20.8,755],[21.0,767],[21.2,798],[21.4,826],[21.6,838],[21.8,866],[22.0,876],[22.2,866],[22.4,869],[22.6,861],[22.8,868],[23.0,886],[23.2,887],[23.4,873],[23.6,875],[23.8,879],[24.0,872],[24.2,870],[24.4,868],[24.6,857],[24.8,826],[25.0,805],[25.2,779],[25.4,752],[25.6,727],[25.8,698],[26.0,694],[26.2,687],[26.4,692],[26.6,695],[26.8,681],[27.0,689],[27.2,695],[27.4,696],[27.6,726],[27.8,761],[28.0,780],[28.2,763],[28.4,751],[28.6,744],[28.8,743],[29.0,746],[29.2,776],[29.4,800],[29.6,811],[29.8,816],[30.0,808],[30.2,782],[30.4,758],[30.6,741],[30.8,723],[31.0,725],[31.2,720],[31.4,736],[31.6,722],[31.8,708],[32.0,695],[32.2,693],[32.4,694],[32.6,695],[32.8,688],[33.0,687],[33.2,681],[33.4,697],[33.6,711],[33.8,730],[34.0,748],[34.2,756],[34.4,762],[34.6,769],[34.8,771],[35.0,791],[35.2,799],[35.4,803],[35.6,813],[35.8,819],[36.0,793],[36.2,763],[36.4,744],[36.6,763],[36.8,778],[37.0,787],[37.2,807],[37.4,824],[37.6,841],[37.8,835],[38.0,807],[38.2,774],[38.4,759],[38.6,749],[38.8,751],[39.0,755],[39.2,749],[39.4,755],[39.6,765],[39.8,763],[40.0,776],[40.2,801],[40.4,829],[40.6,846],[40.8,859],[41.0,876],[41.2,890],[41.4,894],[41.6,872],[41.8,887],[42.0,909],[42.2,920],[42.4,923],[42.6,887],[42.8,863],[43.0,861],[43.2,854],[43.4,838],[43.6,809],[43.8,788],[44.0,763],[44.2,730],[44.4,704],[44.6,670],[44.8,647],[45.0,631],[45.2,636],[45.4,636],[45.6,628],[45.8,623],[46.0,612],[46.2,598],[46.4,573],[46.6,581],[46.8,613],[47.0,633],[47.2,626],[47.4,616],[47.6,603],[47.8,567],[48.0,530],[48.2,508],[48.4,528],[48.6,547],[48.8,549],[49.0,545],[49.2,538],[49.4,543],[49.6,552],[49.8,545],[50.0,542],[50.2,525],[50.4,495],[50.6,470],[50.8,433],[51.0,403],[51.2,415],[51.4,445],[51.6,469],[51.8,497],[52.0,510],[52.2,521],[52.4,533],[52.6,537],[52.8,525],[53.0,514],[53.2,526],[53.4,533],[53.6,536],[53.8,529],[54.0,520],[54.2,495],[54.4,469],[54.6,454],[54.8,457],[55.0,459],[55.2,472],[55.4,471],[55.6,476],[55.8,465],[56.0,446],[56.2,430],[56.4,422],[56.6,405],[56.8,388],[57.0,416],[57.2,433],[57.4,441],[57.6,434],[57.8,421],[58.0,410],[58.2,404],[58.4,393],[58.6,383],[58.8,380],[59.0,380],[59.2,375],[59.4,375],[59.6,377],[59.8,371],[60.0,366],[60.2,365],[60.4,367],[60.6,367],[60.8,366],[61.0,359],[61.2,353],[61.4,350],[61.6,344],[61.8,346],[62.0,341],[62.2,328],[62.4,322],[62.6,311],[62.8,303],[63.0,299],[63.2,297],[63.4,291],[63.6,282],[63.8,258],[64.0,231],[64.2,226],[64.4,255],[64.6,282],[64.8,296],[65.0,300],[65.2,304],[65.4,308],[65.6,309],[65.8,309],[66.0,309],[66.2,308],[66.4,311],[66.6,308],[66.8,311],[67.0,308],[67.2,308],[67.4,309],[67.6,307],[67.8,308],[68.0,316],[68.2,320],[68.4,314],[68.6,309],[68.8,306],[69.0,292],[69.2,283],[69.4,278],[69.6,274],[69.8,271],[70.0,268],[70.2,267],[70.4,298],[70.6,302],[70.8,311],[71.0,312],[71.2,317],[71.4,319],[71.6,299],[71.8,268],[72.0,244],[72.2,234],[72.4,241],[72.6,247],[72.8,248],[73.0,247],[73.2,240],[73.4,240],[73.6,229],[73.8,215],[74.0,203],[74.2,207],[74.4,203],[74.6,178],[74.8,198],[75.0,232],[75.2,253],[75.4,269],[75.6,280],[75.8,253],[76.0,232],[76.2,219],[76.4,219],[76.6,252],[76.8,251],[77.0,248],[77.2,240],[77.4,224],[77.6,233],[77.8,239],[78.0,240],[78.2,241],[78.4,217],[78.6,174],[78.8,168],[79.0,164],[79.2,172],[79.4,171],[79.6,170],[79.8,172],[80.0,167],[80.2,165],[80.4,166],[80.6,165],[80.65,166]]};
+/* Ravitaillements du GPX. Barrière = texte du GPX, tel quel. */
+const SL_RAVITOS = [
+  {km:17.2,short:'R1',name:'Saint-Christo-en-Jarez',cutoff:'4h00'},
+  {km:32.1,short:'R2',name:'Sainte-Catherine',cutoff:'7h'},
+  {km:45.9,short:'R3',name:'Saint-Genou / Le Camp',cutoff:null},
+  {km:60.3,short:'R4',name:'Soucieu-en-Jarrest',cutoff:'12h'},
+  {km:66.6,short:'R5',name:'Chaponost',cutoff:'13h30'}
+];
 const UTBV_MARKERS = [{km:10,label:'Gel 1'},{km:17,label:'Gel 2 · ravito'},{km:23,label:'Gel 3'},{km:28,label:'Gel caféiné'}];
 
 /* Streams Strava (résolution 200 points, échantillonnage régulier en distance) */
@@ -560,19 +571,19 @@ function hideTip(){tipEl.style.opacity=0}
    ÉTAT
    ========================================================= */
 const S = {
-  tab:'dash', planWeek:null, editMode:false, raceId:'utbv', utbvTarget:325*60,
+  tab:'dash', planWeek:null, editMode:false, raceId:'saintelyon', utbvTarget:325*60, slTarget:660*60,
   edits:{}, uploads:{}, activities:null, shoesKm:{}, shoesExtra:[], syncedAt:null, syncSource:'snapshot',
   chat:[], chatBusy:false, strava:{status:'off',msg:''}
 };
 const STORE_KEY='coachtrail:v1';
 async function loadState(){
   const d = await store.get(STORE_KEY);
-  if(d){Object.assign(S,{edits:d.edits||{},uploads:d.uploads||{},activities:d.activities||null,shoesKm:d.shoesKm||{},shoesExtra:d.shoesExtra||[],syncedAt:d.syncedAt||null,syncSource:d.syncSource||'snapshot',utbvTarget:d.utbvTarget||S.utbvTarget,chat:d.chat||[]})}
+  if(d){Object.assign(S,{edits:d.edits||{},uploads:d.uploads||{},activities:d.activities||null,shoesKm:d.shoesKm||{},shoesExtra:d.shoesExtra||[],syncedAt:d.syncedAt||null,syncSource:d.syncSource||'snapshot',utbvTarget:d.utbvTarget||S.utbvTarget,slTarget:d.slTarget||S.slTarget,chat:d.chat||[]})}
 }
 let saveT=null;
 function save(){clearTimeout(saveT);saveT=setTimeout(()=>{
   let chat=S.chat.slice(-40);
-  const pack=()=>({edits:S.edits,uploads:S.uploads,activities:S.activities,shoesKm:S.shoesKm,shoesExtra:S.shoesExtra,syncedAt:S.syncedAt,syncSource:S.syncSource,utbvTarget:S.utbvTarget,chat});
+  const pack=()=>({edits:S.edits,uploads:S.uploads,activities:S.activities,shoesKm:S.shoesKm,shoesExtra:S.shoesExtra,syncedAt:S.syncedAt,syncSource:S.syncSource,utbvTarget:S.utbvTarget,slTarget:S.slTarget,chat});
   /* limite 256 Ko par document : on raccourcit le chat si besoin */
   while(chat.length&&JSON.stringify(pack()).length>230000)chat=chat.slice(2);
   store.set(STORE_KEY,pack());
@@ -996,7 +1007,8 @@ const RACE_LIST = [
 ];
 function raceProfile(id){
   const up=S.uploads[id];
-  if(up) return {pts:up.pts.map(p=>({km:p[0],alt:p[1]})),src:'gpx',file:up.name};
+  if(up) return {pts:up.pts.map(p=>({km:p[0],alt:p[1]})),src:'gpx',file:up.name,up:up.up,down:up.down};
+  if(id==='saintelyon') return {pts:SL_GPX.pts.map(p=>({km:p[0],alt:p[1]})),src:'gpx',file:SL_GPX.file+' (trace officielle)',up:SL_GPX.up,down:SL_GPX.down,builtin:true};
   if(STREAMS[id]) return {pts:streamPts(id),src:'strava'};
   if(id==='utbv') return {pts:schemaPts(),src:'schema'};
   return null;
@@ -1006,6 +1018,8 @@ function sectionsFor(id,prof){
   const total = prof? prof.pts[prof.pts.length-1].km : R.km;
   if(id==='utbv') return UTBV_SECTIONS.map(s=>({...s,to:Math.min(s.to,total)}));
   if(id==='drutel') return [{from:0,to:total/2,note:'Boucle 1'},{from:total/2,to:total,note:'Boucle 2'}];
+  if(id==='saintelyon'){const b=[0,...SL_RAVITOS.map(r=>r.km).filter(k=>k<total),total];const names=['Départ Saint-Étienne',...SL_RAVITOS.map(r=>r.short+' '+r.name)];
+    return b.slice(0,-1).map((a,i)=>({from:a,to:b[i+1],note:names[i]+' → '+(i<SL_RAVITOS.length&&SL_RAVITOS[i].km<total?SL_RAVITOS[i].short+' '+SL_RAVITOS[i].name:'Arrivée Lyon'),rav:i<SL_RAVITOS.length?SL_RAVITOS[i]:null}))}
   const out=[];for(let k=0;k<total-0.01;k+=5)out.push({from:k,to:Math.min(total,k+5)});return out;
 }
 function statsBetween(pts,g,a,b){
@@ -1062,6 +1076,16 @@ function cumSVG(pts,g,scale){
   return `<svg class="chart" viewBox="0 0 ${W} ${H}">${gr}<path d="${d}" fill="none" stroke="#2563eb" stroke-width="2"/></svg>`;
 }
 
+/* D+ du profil, recalé sur le D+ de référence : flux Strava 200 points, GPX (filtre 4 m) ou brief */
+function profileGain(prof,R){
+  const g=cumGain(prof.pts);
+  g.scale = prof.up? prof.up/Math.max(1,g.up) : prof.src==='gpx'? 1 : R.dplus/Math.max(1,g.up);
+  g.total = prof.up || (prof.src==='gpx'? g.up : R.dplus);
+  g.totalDown = prof.down || (prof.src==='gpx'? g.down : R.dminus||null);
+  g.dscale = g.totalDown? g.totalDown/Math.max(1,g.down) : g.scale;
+  return g;
+}
+
 /* Modèle de prédiction : km-effort (km + D+/100) et loi de Riegel 1.06 */
 const REFS = {
   tdlm:{label:'Trail de la Mine',km:28.45,dplus:1506,sec:13473},
@@ -1087,13 +1111,10 @@ function renderGpx(){
         <h3>Nutrition en course</h3>${kvTable(NUTRITION.sl)}</div>
       ${upl}</div>`;
   }
-  const pts=prof.pts;const g=cumGain(pts);
+  const pts=prof.pts;const g=profileGain(prof,R);const scale=g.scale;
   const total=pts[pts.length-1].km;
-  /* Mise à l'échelle du D+ issu du flux 200 points vers le D+ officiel Strava */
-  const scale = prof.src==='strava'? R.dplus/Math.max(1,g.up) : prof.src==='schema'? R.dplus/Math.max(1,g.up) : 1;
-  g.scale=scale;
   const secs=sectionsFor(id,prof);
-  const markers = id==='utbv'?UTBV_MARKERS:[];
+  const markers = id==='utbv'?UTBV_MARKERS:id==='saintelyon'?SL_RAVITOS.map(r=>({km:r.km,label:r.short})):[];
   const P=profileSVG(pts,{sections:secs,markers});
   let strat='',head='';
   if(id==='utbv'){
@@ -1113,11 +1134,27 @@ function renderGpx(){
       <div class="tw" style="margin-top:12px"><table><thead><tr><th>Tronçon km</th><th class="r">D+ / D-</th><th class="r">Allure cible<br><span style="font-weight:500">brief</span></th><th>FC</th><th class="r">Temps</th><th class="r">Passage</th><th>Consigne</th></tr></thead><tbody>${rows}</tbody></table></div>
     </div>`;
     strat=`<div class="card"><h2>Nutrition UTBV</h2>${kvTable(NUTRITION.utbv)}<h3>Avant course (J-3)</h3>${kvTable(NUTRITION.pre)}</div>`;
+  } else if(id==='saintelyon'){
+    const plan=slPlan(prof,g,S.slTarget);
+    const rows=plan.map(r=>`<tr><td class="num"><b>${fmtKm(r.from,1)}→${fmtKm(r.to,1)}</b><br><span class="muted">${esc(r.note)}</span></td>
+      <td class="r num">${fmtKm(r.km,1)}</td><td class="r num">+${fmtInt(r.up)}<br><span class="muted">-${fmtInt(r.down)}</span></td><td class="r num">${r.a0} → ${r.a1}</td>
+      <td class="r num"><b>${fmtPace(r.sec/r.km)}</b></td><td class="r num">${fmtDur(r.sec)}</td><td class="r num"><b>${fmtDur(r.cum)}</b><br><span class="muted">${r.clock}</span></td><td class="small">${r.rav&&r.rav.cutoff?'Barrière '+esc(r.rav.cutoff):''}</td></tr>`).join('');
+    head=`<div class="card"><h2>Stratégie de course<span class="r">temps cible ${fmtDur(S.slTarget)} · départ 23h30</span></h2>
+      <div class="row"><span class="small muted">9h30</span><input type="range" min="${570*60}" max="${780*60}" step="300" value="${S.slTarget}" id="slT" style="flex:1"><span class="small muted">13h00</span></div>
+      <div class="grid g3" style="margin-top:12px;gap:10px">
+        <div class="stat"><div class="l">Prédiction brief</div><div class="v">${R.prediction}</div></div>
+        <div class="stat"><div class="l">Modèle TdlM</div><div class="v">${fmtDur(predict(R.km,R.dplus,'tdlm'))}</div></div>
+        <div class="stat"><div class="l">Modèle Monteynard</div><div class="v">${fmtDur(predict(R.km,R.dplus,'monteynard'))}</div></div>
+      </div>
+      <div class="info" style="margin-top:12px">Temps réparti par km-effort (km + D+/100 + D-/300) avec une fatigue qui croît jusqu'à +25 % en fin de course. Les barrières sont reprises du GPX : vérifie sur le règlement s'il s'agit de l'heure ou du temps de course.</div>
+      <div class="tw" style="margin-top:12px"><table><thead><tr><th>Tronçon</th><th class="r">km</th><th class="r">D+ / D-</th><th class="r">Altitude</th><th class="r">Allure</th><th class="r">Temps</th><th class="r">Passage<br><span style="font-weight:500">heure</span></th><th>GPX</th></tr></thead><tbody>${rows}</tbody></table></div>
+    </div>`;
+    strat=`<div class="card"><h2>Nutrition Sainté-Lyon</h2>${kvTable(NUTRITION.sl)}<p class="small muted" style="margin-bottom:0">${esc(R.notes)}</p></div>`;
   } else {
     const isDone=!!STREAMS[id]&&prof.src==='strava';
     const rows=secs.map(s=>{const st=statsBetween(pts,g,s.from,s.to);const dist=s.to-s.from;
       const tt = isDone&&st.t!=null? st.t : predict(dist,st.up*scale,'tdlm')*1;
-      return `<tr><td class="num"><b>${fmtKm(s.from,1)}→${fmtKm(s.to,1)}</b>${s.note?`<br><span class="muted">${s.note}</span>`:''}</td><td class="r num">+${fmtInt(st.up*scale)}<br><span class="muted">-${fmtInt(st.down*scale)}</span></td><td class="r num">${Math.round(st.a0)} → ${Math.round(st.a1)}</td>
+      return `<tr><td class="num"><b>${fmtKm(s.from,1)}→${fmtKm(s.to,1)}</b>${s.note?`<br><span class="muted">${s.note}</span>`:''}</td><td class="r num">+${fmtInt(st.up*scale)}<br><span class="muted">-${fmtInt(st.down*g.dscale)}</span></td><td class="r num">${Math.round(st.a0)} → ${Math.round(st.a1)}</td>
         <td class="r num"><b>${fmtPace(tt/dist)}</b></td><td class="r num">${fmtDur(tt,true)}</td><td class="r num">${st.hr?Math.round(st.hr):'—'}</td></tr>`}).join('');
     head=`<div class="card"><h2>${isDone?'Analyse par tronçon':'Estimation par tronçon'}<span class="r">${isDone?'données Strava':'modèle km-effort TdlM'}</span></h2>
       <div class="tw"><table><thead><tr><th>Tronçon km</th><th class="r">D+ / D-</th><th class="r">Altitude</th><th class="r">Allure</th><th class="r">Temps</th><th class="r">FC moy</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
@@ -1131,7 +1168,8 @@ function renderGpx(){
     <h2>${esc(R.name)}<span class="r">${srcLab}</span></h2>
     <div class="stats" style="margin-bottom:10px">
       <div class="stat"><div class="l">Distance</div><div class="v num">${fmtKm(total,2)} km</div></div>
-      <div class="stat"><div class="l">D+</div><div class="v num">${fmtInt(prof.src==='gpx'?g.up:R.dplus)} m</div></div>
+      <div class="stat"><div class="l">D+</div><div class="v num">${fmtInt(g.total)} m</div></div>
+      ${g.totalDown?`<div class="stat"><div class="l">D-</div><div class="v num">${fmtInt(g.totalDown)} m</div></div>`:''}
       <div class="stat"><div class="l">Alt. min / max</div><div class="v num">${Math.round(Math.min(...pts.map(p=>p.alt)))} / ${Math.round(Math.max(...pts.map(p=>p.alt)))} m</div></div>
       ${R.date?`<div class="stat"><div class="l">Date</div><div class="v">${fmtDateFr(R.date)}</div></div>`:''}
       ${R.time?`<div class="stat"><div class="l">Temps</div><div class="v">${R.time}</div></div>`:''}
@@ -1145,8 +1183,7 @@ function renderGpx(){
 }
 after.gpx = ()=>{
   const prof=raceProfile(S.raceId);if(!prof)return;
-  const pts=prof.pts;const g=cumGain(pts);const R=RACES[S.raceId];
-  g.scale = prof.src==='gpx'?1:R.dplus/Math.max(1,g.up);
+  const pts=prof.pts;const R=RACES[S.raceId];const g=profileGain(prof,R);
   const total=pts[pts.length-1].km;
   const geom={W:760,pl:40,pr:10,maxKm:total};
   const amin=Math.min(...pts.map(p=>p.alt)),amax=Math.max(...pts.map(p=>p.alt));
@@ -1154,7 +1191,17 @@ after.gpx = ()=>{
   geom.x=k=>40+(760-50)*k/total;geom.y=a=>14+(240-40)*(1-(a-lo)/(hi-lo));
   bindProfile(pts,geom,g);
   const r=$('#utbvT');if(r)r.addEventListener('input',()=>{S.utbvTarget=+r.value;save();const y=scrollY;render();scrollTo(0,y)});
+  const r2=$('#slT');if(r2)r2.addEventListener('input',()=>{S.slTarget=+r2.value;save();const y=scrollY;render();scrollTo(0,y)});
 };
+/* Plan Sainté-Lyon : répartition du temps cible par tronçon de ravito */
+function slPlan(prof,g,target){
+  const pts=prof.pts;const secs=sectionsFor('saintelyon',prof);const total=pts[pts.length-1].km;
+  const rows=secs.map(s=>{const st=statsBetween(pts,g,s.from,s.to);const km=s.to-s.from;const up=st.up*g.scale,down=st.down*g.dscale;
+    const w=(km+up/100+down/300)*(1+0.25*((s.from+s.to)/2)/total);return {...s,km,up,down,a0:Math.round(st.a0),a1:Math.round(st.a1),w}});
+  const W=rows.reduce((a,r)=>a+r.w,0);let cum=0;
+  return rows.map(r=>{const sec=target*r.w/W;cum+=sec;const t=new Date(2026,10,28,23,30);t.setSeconds(t.getSeconds()+cum);
+    return {...r,sec,cum,clock:`${String(t.getHours()).padStart(2,'0')}h${String(t.getMinutes()).padStart(2,'0')}`}});
+}
 function kvTable(rows){return `<table><tbody>${rows.map(([k,v])=>`<tr><td style="width:40%;color:var(--muted);font-weight:600">${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</tbody></table>`}
 
 /* Parseur GPX */
@@ -1175,7 +1222,10 @@ function parseGPX(text){
   const out=[];const step=Math.max(0.05,km/1200);let j=0;
   for(let k=0;k<=km;k+=step){while(j<sm.length-2&&sm[j+1].km<k)j++;const a=sm[j],b=sm[j+1]||a;const f=b.km>a.km?(k-a.km)/(b.km-a.km):0;out.push([+k.toFixed(3),+(a.alt+(b.alt-a.alt)*Math.max(0,Math.min(1,f))).toFixed(1)])}
   out.push([+km.toFixed(3),+sm[sm.length-1].alt.toFixed(1)]);
-  return out;
+  /* D+ / D- sur la trace brute, filtre 4 m */
+  let up=0,down=0,ref=pts[0].alt;
+  for(const q of pts){const d=q.alt-ref;if(d>=4){up+=d;ref=q.alt}else if(d<=-4){down-=d;ref=q.alt}}
+  return {pts:out,up:Math.round(up),down:Math.round(down)};
 }
 
 /* =========================================================
@@ -1245,6 +1295,32 @@ function mcpParams(){
   if(!tok) return {betas:[],extra:{}};
   return {betas:['mcp-client-2025-11-20'],extra:{mcp_servers:[{type:'url',url:STRAVA_MCP,name:'strava',authorization_token:tok}],tools:[{type:'mcp_toolset',mcp_server_name:'strava'}]}};
 }
+/* Parcours vus par le coach : mêmes calculs que l'onglet Parcours */
+function courseData(id,withProfile=false){
+  const R=RACES[id];const prof=raceProfile(id);if(!R)return null;
+  const base={id,nom:R.name,date:R.date||null,depart:R.start||null};
+  if(!prof)return {...base,distance_km:R.km,dplus:R.dplus,source:'brief, pas de profil'};
+  const pts=prof.pts;const g=profileGain(prof,R);const total=pts[pts.length-1].km;
+  const src=prof.src==='gpx'?'GPX '+prof.file:prof.src==='strava'?'activité Strava (réalisé)':'profil schématique du brief';
+  let troncons;
+  if(id==='saintelyon'){troncons=slPlan(prof,g,S.slTarget).map(r=>({de:+r.from.toFixed(1),a:+r.to.toFixed(1),nom:r.note,km:+r.km.toFixed(1),dplus:Math.round(r.up),dmoins:Math.round(r.down),alt:[r.a0,r.a1],temps_cible:fmtDur(r.sec),allure_cible:fmtPace(r.sec/r.km),passage:fmtDur(r.cum)+' ('+r.clock+')',barriere_gpx:r.rav&&r.rav.cutoff||null}))}
+  else troncons=sectionsFor(id,prof).map(s=>{const st=statsBetween(pts,g,s.from,s.to);const o={de:+s.from.toFixed(1),a:+s.to.toFixed(1),dplus:Math.round(id==='utbv'&&prof.src!=='gpx'?s.up:st.up*g.scale),dmoins:Math.round(id==='utbv'&&prof.src!=='gpx'?s.down:st.down*g.dscale),alt:[Math.round(st.a0),Math.round(st.a1)]};
+    if(s.note)o.note=s.note;if(s.pace)o.allure_brief=s.pace;if(s.fc)o.fc=s.fc;
+    if(prof.src==='strava'&&st.t!=null){o.temps=fmtDur(st.t,true);o.allure=fmtPace(st.t/(s.to-s.from));if(st.hr)o.fc_moy=Math.round(st.hr)}return o});
+  const out={...base,source:src,distance_km:+total.toFixed(2),dplus:Math.round(g.total),dmoins:g.totalDown?Math.round(g.totalDown):null,
+    alt_min:Math.round(Math.min(...pts.map(p=>p.alt))),alt_max:Math.round(Math.max(...pts.map(p=>p.alt))),troncons};
+  if(id==='saintelyon')out.temps_cible=fmtDur(S.slTarget);
+  if(id==='utbv')out.temps_cible=fmtDur(S.utbvTarget);
+  if(R.time)out.temps_realise=R.time;
+  if(withProfile){const prof1=[];let next=0;for(const q of pts){if(q.km>=next-1e-6){prof1.push([+q.km.toFixed(1),Math.round(q.alt)]);next+=1}}
+    const last=pts[pts.length-1];prof1.push([+last.km.toFixed(2),Math.round(last.alt)]);out.profil_1km=prof1}
+  return out;
+}
+function coursesForPrompt(){
+  return RACE_LIST.map(r=>{const c=courseData(r.id);if(!c)return '';
+    const tr=(c.troncons||[]).map(t=>`${t.de}-${t.a} km +${t.dplus}/-${t.dmoins}${t.nom?' '+t.nom:''}${t.passage?' passage '+t.passage:''}${t.barriere_gpx?' barrière GPX '+t.barriere_gpx:''}${t.temps?' réalisé '+t.temps+' FC '+(t.fc_moy||'?'):''}`).join(' | ');
+    return `- ${c.nom} : ${c.distance_km} km, ${c.dplus} D+${c.dmoins?', '+c.dmoins+' D-':''}${c.alt_min!=null?', alt '+c.alt_min+'-'+c.alt_max+' m':''}. Source : ${c.source}.${c.temps_cible?' Temps cible du dashboard : '+c.temps_cible+'.':''}\n  Tronçons : ${tr}`}).filter(Boolean).join('\n');
+}
 function systemPrompt(){
   const cw=currentWeekNum();
   const weeks=WEEKS.map(w=>getWeek(w.w));
@@ -1271,7 +1347,7 @@ OBJECTIFS
 - UTBV 10/10/2026, Cublize : 42,53 km, 2173 D+/D-, alt 317-827, boucle. Prédiction 5h10-5h25. Nutrition : 4 gels (km 10, 17, 23, 28 caféiné) + flasque 500 ml isotonique, 50-60 g glucides/h, sodium 500-700 mg/h.
   Tronçons : ${UTBV_SECTIONS.map(s=>`${s.from}-${s.to} km +${s.up}/-${s.down} allure ${s.pace} : ${s.note}`).join(' | ')}
   Attention : ces allures totalisent ~5h49, au-dessus de la prédiction.
-- Sainté-Lyon 28/11/2026, départ 23h30 : ~80 km, ~2200 D+, nocturne, mixte sentier/bitume. Prédiction 10h30-12h00. Premier ultra. Nutrition : 500-700 g glucides, gels + isotonique 5 premières heures puis solide tiède (soupe, riz, fromage, coca), bouillons chauds.
+- Sainté-Lyon 28/11/2026, départ 23h30 Saint-Étienne : 80,65 km, 2209 D+, 2537 D- (trace officielle), alt 164-926 m, nocturne, mixte sentier/bitume. Ravitos : ${SL_RAVITOS.map(r=>r.short+' '+r.name+' km '+r.km+(r.cutoff?' (barrière GPX '+r.cutoff+')':'')).join(', ')}. Prédiction 10h30-12h00. Premier ultra. Nutrition : 500-700 g glucides, gels + isotonique 5 premières heures puis solide tiède (soupe, riz, fromage, coca), bouillons chauds.
 
 NUTRITION QUOTIDIENNE : 2800-3200 kcal en charge, 2400-2600 en affûtage. 55/25/20. Glucides 5-7 g/kg, protéines 1,6-1,8 g/kg. Post-SL 1,2 g/kg glucides + 0,3 g/kg protéines en 30 min. J-3 : 8-10 g/kg glucides, moins de fibres, 2-3 L eau salée.
 
@@ -1281,11 +1357,14 @@ ${wkLines}
 SEMAINE EN COURS S${cw}
 ${curLines}
 
+PARCOURS DU DASHBOARD (onglet Parcours, mêmes chiffres)
+${coursesForPrompt()}
+
 CHAUSSURES
 ${shoes}
 
 RÈGLES
-- Base tes réponses sur ces données. Si l'outil Strava est disponible, utilise-le pour les données récentes (activités, streams, zones, matériel) avant de conclure.
+- Base tes réponses sur ces données. Pour le profil détaillé d'un parcours (altitude km par km), utilise l'outil parcours s'il est disponible. Si l'outil Strava est disponible, utilise-le pour les données récentes (activités, streams, zones, matériel) avant de conclure.
 - Donne des consignes actionnables : séance, durée, allure, FC, nutrition.
 - Signale tout risque de blessure ou de surcharge. Pour une douleur persistante, recommande un professionnel de santé.`;
 }
@@ -1297,6 +1376,8 @@ function renderCoach(){
   const quick=['Analyse ma semaine en cours','Ma stratégie UTBV tronçon par tronçon','Plan nutrition J-3 à J0 pour l\'UTBV','Quelle séance demain ?','Compare mes 3 dernières sorties longues','Que changer pour la Sainté-Lyon ?'];
   const settings = claudeMode ? `
       <div class="info small">Le coach utilise ton compte Claude. Aucune clé API. La première question demande ton accord.</div>
+      <h3>Parcours</h3>
+      <div class="small">Le coach connaît les 5 parcours de l'onglet Parcours : distance, D+, tronçons, temps cibles. ${CAP.tools?'Il peut aussi lire le profil km par km.':''}</div>
       <h3>Strava</h3>
       <div class="small">${CAP.mcp?(CAP.tools?'Le coach peut lire tes activités Strava via ton connecteur Strava.':'Le tableau de bord lit Strava via ton connecteur. Le coach utilise les données affichées.'):'Connecteur Strava non disponible sur cette vue. Le coach utilise les données affichées.'}</div>
       <div class="small muted" style="margin-top:6px">État : ${esc(stravaLabel())}</div>
@@ -1323,7 +1404,7 @@ function mdLite(s){
   return esc(s).replace(/^### (.*)$/gm,'<h4>$1</h4>').replace(/^## (.*)$/gm,'<h4>$1</h4>').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/^- /gm,'• ');
 }
 function msgText(m){if(typeof m.content==='string')return m.content;return (m.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('')}
-const toolChips = names=>names.length?`<div class="tools">${names.map(t=>`<span class="pill o">Strava · ${esc(t)}</span>`).join('')}</div>`:'';
+const toolChips = names=>names.length?`<div class="tools">${names.map(t=>`<span class="pill o">${/^parcours/.test(t)?esc(t.replace('parcours','Parcours ·')):'Strava · '+esc(t)}</span>`).join('')}</div>`:'';
 function msgHTML(m){
   if(m.role==='user') return `<div class="msg u">${esc(msgText(m))}</div>`;
   if(m.role==='error') return `<div class="msg a err">${esc(m.text)}</div>`;
@@ -1395,7 +1476,7 @@ function sampleTurns(){
 }
 function sampleOpts(signal,onText,onTool){
   const o={signal,modelTier:'default',onText:({text})=>onText(text)};
-  if(CAP.tools&&CAP.mcp) o.tools=stravaTools(onTool); else o.cache=false;
+  if(CAP.tools) o.tools=[parcoursTool(onTool),...(CAP.mcp?stravaTools(onTool):[])]; else o.cache=false;
   return o;
 }
 function sampleErrorCopy(code){
@@ -1408,6 +1489,13 @@ function sampleErrorCopy(code){
     empty_completion:'Réponse vide. Pose une question plus précise.',
     prompt_too_large:'Conversation trop longue. Vide le chat et recommence.'
   })[code]||'Le coach n\'a pas pu répondre. Réessaie.';
+}
+/* Outil parcours : profil et tronçons d'une course du dashboard */
+function parcoursTool(onTool){
+  return {name:'parcours',
+    description:'Parcours du dashboard : distance, D+, D-, tronçons (D+, altitude, temps cible ou réalisé, barrières) et profil altimétrique km par km. ids : '+RACE_LIST.map(r=>r.id+' ('+r.label+')').join(', ')+'.',
+    inputSchema:{type:'object',properties:{id:{type:'string',enum:RACE_LIST.map(r=>r.id)}},required:['id']},
+    execute(input){const id=String(input.id||'');if(!RACES[id])throw new Error('Parcours inconnu : '+id);onTool('parcours '+id);return courseData(id,true)}};
 }
 /* Outils Strava offerts au coach : appels du connecteur Strava du lecteur */
 function stravaTools(onTool){
@@ -1552,7 +1640,7 @@ document.addEventListener('click',e=>{
   if(a==='clearchat'){S.chat=[];save();return render()}
 });
 async function importGPX(f){
-  try{const pts=parseGPX(await f.text());S.uploads[S.raceId]={name:f.name,pts};save();render();toast('GPX importé : '+f.name)}
+  try{const r=parseGPX(await f.text());S.uploads[S.raceId]={name:f.name,pts:r.pts,up:r.up,down:r.down};save();render();toast(`GPX importé : ${f.name} · ${fmtKm(r.pts[r.pts.length-1][0],1)} km · ${fmtInt(r.up)} m D+`)}
   catch(err){toast('GPX : '+err.message,'err')}
 }
 $('#gpxIn').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(f)importGPX(f)});
