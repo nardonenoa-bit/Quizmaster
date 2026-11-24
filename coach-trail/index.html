@@ -210,6 +210,9 @@ td.r,th.r{text-align:right}
 .info{background:#eef4ff;border-radius:10px;padding:10px 12px;color:#1e3a8a;font-size:13px}
 .empty{padding:28px;text-align:center;color:var(--muted)}
 .hide{display:none !important}
+.ravrow td{background:#eef4ff;border-bottom:1px solid #dbe6ff;padding:7px 8px}
+.ravline{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center;font-size:13px;color:#1e3a8a}
+.ravline .dot{margin-right:-8px}
 .stops{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--line2)}
 .stop{display:flex;flex-direction:column;gap:2px}
 .pace{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--line);border-radius:9px;padding:2px;background:#fff}
@@ -1173,7 +1176,9 @@ function renderGpx(){
     const plan=slPlan(prof,g,S.slTarget);const key=slKey(S.cut);
     const rows=plan.map(r=>`<tr class="${r.custom?'custom':''}"><td class="num"><b>${fmtKm(r.from,1)}→${fmtKm(r.to,1)}</b><br>${terrain?terrainPill(r)+(r.rav?` <span class="muted">→ ${esc(r.rav.short+' '+r.rav.name)}</span>`:''):`<span class="muted">${esc(r.note)}</span>`}</td>
       <td class="r num">${fmtKm(r.km,1)}</td><td class="r num">+${fmtInt(r.up)}<br><span class="muted">-${fmtInt(r.down)}</span></td><td class="r num">${r.a0} → ${r.a1}</td>
-      <td class="r">${paceCell(key,r)}</td><td class="r num">${fmtDur(r.sec)}</td><td class="r num"><b>${fmtDur(r.cum)}</b><br><span class="muted">${r.clock}</span>${r.stopsBefore?`<br><span class="small muted">dont ${Math.round(r.stopsBefore/60)} min de pauses</span>`:''}${r.stop?`<br><span class="small" style="color:var(--orange-d)"><b>repart ${fmtDur(r.cum+r.stop)}</b> · ${clockAt(r.cum+r.stop)}</span>`:''}</td><td class="small">${r.stop?`<b>Pause ${Math.round(r.stop/60)} min</b><br>`:''}${r.rav&&r.rav.cutoff?'Barrière '+esc(r.rav.cutoff):''}</td></tr>`).join('');
+      <td class="r">${paceCell(key,r)}</td><td class="r num">${fmtDur(r.sec)}</td><td class="r num"><b>${fmtDur(r.cum)}</b><br><span class="muted">${r.clock}</span>${r.stopsBefore?`<br><span class="small muted">dont ${Math.round(r.stopsBefore/60)} min de pauses</span>`:''}${r.stop?`<br><span class="small" style="color:var(--orange-d)"><b>repart ${fmtDur(r.cum+r.stop)}</b> · ${clockAt(r.cum+r.stop)}</span>`:''}</td><td class="small">${r.stop?`<b>Pause ${Math.round(r.stop/60)} min</b><br>`:''}${r.rav&&r.rav.cutoff?'Barrière '+esc(r.rav.cutoff):''}</td></tr>${terrain&&r.rav?ravRow(r):''}`).join('');
+    const rowsAll = terrain? `<tr class="ravrow"><td colspan="8"><div class="ravline"><span class="dot" style="background:${MARK_COLORS.end}"></span><b>Départ · Saint-Étienne</b><span>km 0</span><span>départ <b>23h30</b></span></div></td></tr>`+rows
+      +`<tr class="ravrow"><td colspan="8"><div class="ravline"><span class="dot" style="background:${MARK_COLORS.end}"></span><b>Arrivée · Lyon</b><span>km ${fmtKm(plan[plan.length-1].to,1)}</span><span>arrivée <b>${fmtDur(plan[plan.length-1].cum)}</b> · ${plan[plan.length-1].clock}</span></div></td></tr>` : rows;
     head=`<div class="card"><h2>Stratégie de course<span class="r">${terrain?plan.length+' segments · ':''}temps cible ${fmtDur(S.slTarget)} · départ 23h30</span></h2>
       <div class="row"><span class="small muted">9h30</span><input type="range" min="${570*60}" max="${780*60}" step="300" value="${S.slTarget}" id="slT" style="flex:1"><span class="small muted">13h00</span></div>
       <div class="grid g3" style="margin-top:12px;gap:10px">
@@ -1187,7 +1192,7 @@ function renderGpx(){
         ${S.countStops?SL_RAVITOS.map(r=>`<label class="stop small"><span>${r.short} ${esc(r.name.split(' ')[0]==='Saint-Genou'?'Saint-Genou':r.name)}</span><span class="row" style="gap:4px"><input type="number" min="0" max="60" step="1" class="inp num" id="stop-${r.short}" data-stop="${r.short}" value="${(S.stops||{})[r.short]??0}" style="width:64px"> min</span></label>`).join(''):''}
       </div>
       <div class="info" style="margin-top:12px">${S.countStops?'Le temps cible est l\'heure d\'arrivée, pauses comprises. Les heures du tableau sont les arrivées au ravito ; la pause s\'ajoute avant de repartir. ':''}Temps réparti par km-effort (km + D+/100 + D-/300) avec une fatigue qui croît jusqu'à +25 % en fin de course. Les barrières sont reprises du GPX : vérifie sur le règlement s'il s'agit de l'heure ou du temps de course.</div>
-      <div class="tw" style="margin-top:12px"><table><thead><tr><th>Tronçon</th><th class="r">km</th><th class="r">D+ / D-</th><th class="r">Altitude</th><th class="r">Allure /km</th><th class="r">Temps</th><th class="r">Temps cumulé<br><span style="font-weight:500">pauses comprises</span></th><th>Ravito</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="tw" style="margin-top:12px"><table><thead><tr><th>Tronçon</th><th class="r">km</th><th class="r">D+ / D-</th><th class="r">Altitude</th><th class="r">Allure /km</th><th class="r">Temps</th><th class="r">Temps cumulé<br><span style="font-weight:500">pauses comprises</span></th><th>Ravito</th></tr></thead><tbody>${rowsAll}</tbody></table></div>
     </div>`;
     const kp=slKeyPoints(prof,plan);
     head+=`<div class="card" style="margin-top:16px"><h2>Lieux clés et ravitos<span class="r">passages du plan · arrivée en ${fmtDur(plan[plan.length-1].cum)}</span></h2>
@@ -1290,6 +1295,11 @@ function utbvPlan(target){
   return UTBV_SECTIONS.map((s,i)=>{const km=s.to-s.from;const custom=ov[i]!=null;const sec=custom?ov[i]*km:base[i]*f;cum+=sec;return {...s,i,km,sec,cum,custom,baseTot}});
 }
 /* Cellule d'allure modifiable : − / + 10 s/km ou saisie m:ss */
+/* Ligne ravito insérée dans le tableau par dénivelé */
+function ravRow(r){
+  return `<tr class="ravrow"><td colspan="8"><div class="ravline"><span class="dot" style="background:${MARK_COLORS.rav}"></span><b>${esc(r.rav.short+' · '+r.rav.name)}</b><span>km ${fmtKm(r.to,1)}</span>
+    <span>arrivée <b>${fmtDur(r.cum)}</b> · ${r.clock}</span>${r.stop?`<span>pause <b>${Math.round(r.stop/60)} min</b></span><span>repart <b>${fmtDur(r.cum+r.stop)}</b> · ${clockAt(r.cum+r.stop)}</span>`:''}${r.rav.cutoff?`<span class="muted">barrière GPX ${esc(r.rav.cutoff)}</span>`:''}</div></td></tr>`;
+}
 function terrainPill(r){const c=r.type==='Montée'?'o':r.type==='Descente'?'':'g';
   return `<span class="pill ${c}">${r.type} ${(r.grade>0?'+':'')+r.grade.toFixed(1).replace('.',',')} %</span>`}
 function paceCell(race,r){
