@@ -210,6 +210,8 @@ td.r,th.r{text-align:right}
 .info{background:#eef4ff;border-radius:10px;padding:10px 12px;color:#1e3a8a;font-size:13px}
 .empty{padding:28px;text-align:center;color:var(--muted)}
 .hide{display:none !important}
+.stops{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--line2)}
+.stop{display:flex;flex-direction:column;gap:2px}
 .pace{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--line);border-radius:9px;padding:2px;background:#fff}
 .pace.on{border-color:var(--orange);background:var(--orange-s)}
 .pbtn{border:0;background:var(--line2);border-radius:7px;width:26px;height:26px;font-weight:700;cursor:pointer;line-height:1}
@@ -592,19 +594,19 @@ function hideTip(){tipEl.style.opacity=0}
    ÉTAT
    ========================================================= */
 const S = {
-  tab:'dash', planWeek:null, editMode:false, raceId:'saintelyon', utbvTarget:325*60, slTarget:660*60, paces:{}, cut:'rav',
+  tab:'dash', planWeek:null, editMode:false, raceId:'saintelyon', utbvTarget:325*60, slTarget:660*60, paces:{}, cut:'rav', stops:{R1:2,R2:4,R3:5,R4:4,R5:2}, countStops:true,
   edits:{}, uploads:{}, activities:null, shoesKm:{}, shoesExtra:[], syncedAt:null, syncSource:'snapshot',
   chat:[], chatBusy:false, strava:{status:'off',msg:''}
 };
 const STORE_KEY='coachtrail:v1';
 async function loadState(){
   const d = await store.get(STORE_KEY);
-  if(d){Object.assign(S,{edits:d.edits||{},uploads:d.uploads||{},activities:d.activities||null,shoesKm:d.shoesKm||{},shoesExtra:d.shoesExtra||[],syncedAt:d.syncedAt||null,syncSource:d.syncSource||'snapshot',utbvTarget:d.utbvTarget||S.utbvTarget,slTarget:d.slTarget||S.slTarget,paces:d.paces||{},cut:d.cut||'rav',chat:d.chat||[]})}
+  if(d){Object.assign(S,{edits:d.edits||{},uploads:d.uploads||{},activities:d.activities||null,shoesKm:d.shoesKm||{},shoesExtra:d.shoesExtra||[],syncedAt:d.syncedAt||null,syncSource:d.syncSource||'snapshot',utbvTarget:d.utbvTarget||S.utbvTarget,slTarget:d.slTarget||S.slTarget,paces:d.paces||{},cut:d.cut||'rav',stops:d.stops||S.stops,countStops:d.countStops!==false,chat:d.chat||[]})}
 }
 let saveT=null;
 function save(){clearTimeout(saveT);saveT=setTimeout(()=>{
   let chat=S.chat.slice(-40);
-  const pack=()=>({edits:S.edits,uploads:S.uploads,activities:S.activities,shoesKm:S.shoesKm,shoesExtra:S.shoesExtra,syncedAt:S.syncedAt,syncSource:S.syncSource,utbvTarget:S.utbvTarget,slTarget:S.slTarget,paces:S.paces,cut:S.cut,chat});
+  const pack=()=>({edits:S.edits,uploads:S.uploads,activities:S.activities,shoesKm:S.shoesKm,shoesExtra:S.shoesExtra,syncedAt:S.syncedAt,syncSource:S.syncSource,utbvTarget:S.utbvTarget,slTarget:S.slTarget,paces:S.paces,cut:S.cut,stops:S.stops,countStops:S.countStops,chat});
   /* limite 256 Ko par document : on raccourcit le chat si besoin */
   while(chat.length&&JSON.stringify(pack()).length>230000)chat=chat.slice(2);
   store.set(STORE_KEY,pack());
@@ -1171,7 +1173,7 @@ function renderGpx(){
     const plan=slPlan(prof,g,S.slTarget);const key=slKey(S.cut);
     const rows=plan.map(r=>`<tr class="${r.custom?'custom':''}"><td class="num"><b>${fmtKm(r.from,1)}→${fmtKm(r.to,1)}</b><br>${terrain?terrainPill(r)+(r.rav?` <span class="muted">→ ${esc(r.rav.short+' '+r.rav.name)}</span>`:''):`<span class="muted">${esc(r.note)}</span>`}</td>
       <td class="r num">${fmtKm(r.km,1)}</td><td class="r num">+${fmtInt(r.up)}<br><span class="muted">-${fmtInt(r.down)}</span></td><td class="r num">${r.a0} → ${r.a1}</td>
-      <td class="r">${paceCell(key,r)}</td><td class="r num">${fmtDur(r.sec)}</td><td class="r num"><b>${fmtDur(r.cum)}</b><br><span class="muted">${r.clock}</span></td><td class="small">${r.rav&&r.rav.cutoff?'Barrière '+esc(r.rav.cutoff):''}</td></tr>`).join('');
+      <td class="r">${paceCell(key,r)}</td><td class="r num">${fmtDur(r.sec)}</td><td class="r num"><b>${fmtDur(r.cum)}</b><br><span class="muted">${r.clock}</span></td><td class="small">${r.stop?`<b>Pause ${Math.round(r.stop/60)} min</b><br>`:''}${r.rav&&r.rav.cutoff?'Barrière '+esc(r.rav.cutoff):''}</td></tr>`).join('');
     head=`<div class="card"><h2>Stratégie de course<span class="r">${terrain?plan.length+' segments · ':''}temps cible ${fmtDur(S.slTarget)} · départ 23h30</span></h2>
       <div class="row"><span class="small muted">9h30</span><input type="range" min="${570*60}" max="${780*60}" step="300" value="${S.slTarget}" id="slT" style="flex:1"><span class="small muted">13h00</span></div>
       <div class="grid g3" style="margin-top:12px;gap:10px">
@@ -1180,8 +1182,12 @@ function renderGpx(){
         <div class="stat"><div class="l">Modèle Monteynard</div><div class="v">${fmtDur(predict(R.km,R.dplus,'monteynard'))}</div></div>
       </div>
       ${paceSummary(key,plan,S.slTarget,new Date(2026,10,28,23,30))}
-      <div class="info" style="margin-top:12px">Temps réparti par km-effort (km + D+/100 + D-/300) avec une fatigue qui croît jusqu'à +25 % en fin de course. Les barrières sont reprises du GPX : vérifie sur le règlement s'il s'agit de l'heure ou du temps de course.</div>
-      <div class="tw" style="margin-top:12px"><table><thead><tr><th>Tronçon</th><th class="r">km</th><th class="r">D+ / D-</th><th class="r">Altitude</th><th class="r">Allure /km</th><th class="r">Temps</th><th class="r">Passage<br><span style="font-weight:500">heure</span></th><th>GPX</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="stops">
+        <label class="row" style="gap:6px;cursor:pointer"><input type="checkbox" id="countStops" ${S.countStops?'checked':''}> <b class="small">Compter les pauses aux ravitos</b></label>
+        ${S.countStops?SL_RAVITOS.map(r=>`<label class="stop small"><span>${r.short} ${esc(r.name.split(' ')[0]==='Saint-Genou'?'Saint-Genou':r.name)}</span><span class="row" style="gap:4px"><input type="number" min="0" max="60" step="1" class="inp num" id="stop-${r.short}" data-stop="${r.short}" value="${(S.stops||{})[r.short]??0}" style="width:64px"> min</span></label>`).join(''):''}
+      </div>
+      <div class="info" style="margin-top:12px">${S.countStops?'Le temps cible est l\'heure d\'arrivée, pauses comprises. Les heures du tableau sont les arrivées au ravito ; la pause s\'ajoute avant de repartir. ':''}Temps réparti par km-effort (km + D+/100 + D-/300) avec une fatigue qui croît jusqu'à +25 % en fin de course. Les barrières sont reprises du GPX : vérifie sur le règlement s'il s'agit de l'heure ou du temps de course.</div>
+      <div class="tw" style="margin-top:12px"><table><thead><tr><th>Tronçon</th><th class="r">km</th><th class="r">D+ / D-</th><th class="r">Altitude</th><th class="r">Allure /km</th><th class="r">Temps</th><th class="r">Arrivée<br><span style="font-weight:500">heure</span></th><th>Ravito</th></tr></thead><tbody>${rows}</tbody></table></div>
     </div>`;
     const kp=slKeyPoints(prof,plan);
     head+=`<div class="card" style="margin-top:16px"><h2>Lieux clés et ravitos<span class="r">passages du plan · arrivée en ${fmtDur(plan[plan.length-1].cum)}</span></h2>
@@ -1270,8 +1276,11 @@ function slPlan(prof,g,target,mode=S.cut){
     const w=(km+up/100+down/300)*(1+0.25*((s.from+s.to)/2)/total);return {...s,km,up,down,a0:Math.round(st.a0),a1:Math.round(st.a1),w}});
   const W=rows.reduce((a,r)=>a+r.w,0);let cum=0;
   const ov=(S.paces&&S.paces[slKey(mode)])||{};
-  return rows.map((r,i)=>{const custom=ov[i]!=null;const sec=custom?ov[i]*r.km:target*r.w/W;cum+=sec;const t=new Date(2026,10,28,23,30);t.setSeconds(t.getSeconds()+cum);
-    return {...r,i,sec,cum,custom,clock:`${String(t.getHours()).padStart(2,'0')}h${String(t.getMinutes()).padStart(2,'0')}`}});
+  /* Pauses aux ravitos : le temps cible reste l'heure d'arrivée, la course hors pauses en est déduite */
+  const stopOf=r=>S.countStops&&r.rav?Math.max(0,+(S.stops||{})[r.rav.short]||0)*60:0;
+  const stopsTot=rows.reduce((a,r)=>a+stopOf(r),0);const moving=Math.max(target*0.5,target-stopsTot);
+  return rows.map((r,i)=>{const custom=ov[i]!=null;const sec=custom?ov[i]*r.km:moving*r.w/W;cum+=sec;const t=new Date(2026,10,28,23,30);t.setSeconds(t.getSeconds()+cum);
+    const stop=stopOf(r);const row={...r,i,sec,cum,stop,custom,clock:`${String(t.getHours()).padStart(2,'0')}h${String(t.getMinutes()).padStart(2,'0')}`};cum+=stop;return row});
 }
 /* Plan UTBV : allures du brief ramenées au temps cible, sauf tronçons modifiés à la main */
 function utbvPlan(target){
@@ -1287,11 +1296,12 @@ function paceCell(race,r){
 }
 function paceSummary(race,plan,target,start){
   const tot=plan[plan.length-1].cum;const diff=tot-target;const any=plan.some(r=>r.custom);
-  const km=plan.reduce((a,r)=>a+r.km,0);
+  const km=plan.reduce((a,r)=>a+r.km,0);const mov=plan.reduce((a,r)=>a+r.sec,0);const stops=tot-mov;
   let arr='';if(start){const t=new Date(start.getTime()+tot*1000);arr=` · arrivée ${String(t.getHours()).padStart(2,'0')}h${String(t.getMinutes()).padStart(2,'0')}`}
   return `<div class="row" style="margin-top:12px;gap:14px">
     <div class="stat"><div class="l">Temps final</div><div class="v num" style="color:var(--orange)">${fmtDur(tot)}</div></div>
-    <div class="stat"><div class="l">Allure moyenne</div><div class="v num">${fmtPace(tot/km)}/km</div></div>
+    ${stops>30?`<div class="stat"><div class="l">En mouvement</div><div class="v num">${fmtDur(mov)}</div></div><div class="stat"><div class="l">Pauses</div><div class="v num">${fmtDur(stops)}</div></div>`:''}
+    <div class="stat"><div class="l">Allure en mouvement</div><div class="v num">${fmtPace(mov/km)}/km</div></div>
     <div class="stat"><div class="l">Écart à la cible</div><div class="v num">${Math.abs(diff)<30?'à l\'heure':(diff>0?'+':'−')+fmtDur(Math.abs(diff))}</div></div>
     <span class="sp"></span>${any?`<button class="btn sm" data-act="resetpace" data-race-id="${race}">Réinitialiser les allures</button>`:''}</div>
     <div class="small muted" style="margin-top:6px">Change l'allure d'un tronçon avec − / + (10 s/km) ou tape-la (m:ss). Les tronçons modifiés sont en orange et ne bougent plus avec le curseur${arr}.</div>`;
@@ -1299,7 +1309,7 @@ function paceSummary(race,plan,target,start){
 /* Temps de course et heure de passage à un km donné, d'après le plan */
 function slPassage(plan,km){
   let prev=0;for(const r of plan){if(km<=r.to+1e-6){const f=r.km?(km-r.from)/r.km:0;const sec=prev+r.sec*Math.max(0,Math.min(1,f));
-    const t=new Date(2026,10,28,23,30);t.setSeconds(t.getSeconds()+sec);return {sec,clock:`${String(t.getHours()).padStart(2,'0')}h${String(t.getMinutes()).padStart(2,'0')}`}}prev=r.cum}
+    const t=new Date(2026,10,28,23,30);t.setSeconds(t.getSeconds()+sec);return {sec,clock:`${String(t.getHours()).padStart(2,'0')}h${String(t.getMinutes()).padStart(2,'0')}`}}prev=r.cum+(r.stop||0)}
   return {sec:prev,clock:''};
 }
 function slKeyPoints(prof,plan){
@@ -1407,13 +1417,14 @@ function courseData(id,withProfile=false){
   const pts=prof.pts;const g=profileGain(prof,R);const total=pts[pts.length-1].km;
   const src=prof.src==='gpx'?'GPX '+prof.file:prof.src==='strava'?'activité Strava (réalisé)':'profil schématique du brief';
   let troncons;
-  if(id==='saintelyon'){troncons=slPlan(prof,g,S.slTarget,'rav').map(r=>({de:+r.from.toFixed(1),a:+r.to.toFixed(1),nom:r.note,km:+r.km.toFixed(1),dplus:Math.round(r.up),dmoins:Math.round(r.down),alt:[r.a0,r.a1],temps_cible:fmtDur(r.sec),allure_cible:fmtPace(r.sec/r.km),allure_modifiee:r.custom||undefined,passage:fmtDur(r.cum)+' ('+r.clock+')',barriere_gpx:r.rav&&r.rav.cutoff||null}))}
+  if(id==='saintelyon'){troncons=slPlan(prof,g,S.slTarget,'rav').map(r=>({de:+r.from.toFixed(1),a:+r.to.toFixed(1),nom:r.note,km:+r.km.toFixed(1),dplus:Math.round(r.up),dmoins:Math.round(r.down),alt:[r.a0,r.a1],temps_cible:fmtDur(r.sec),allure_cible:fmtPace(r.sec/r.km),allure_modifiee:r.custom||undefined,passage:fmtDur(r.cum)+' ('+r.clock+')',pause_min:r.stop?Math.round(r.stop/60):undefined,barriere_gpx:r.rav&&r.rav.cutoff||null}))}
   else troncons=sectionsFor(id,prof).map(s=>{const st=statsBetween(pts,g,s.from,s.to);const o={de:+s.from.toFixed(1),a:+s.to.toFixed(1),dplus:Math.round(id==='utbv'&&prof.src!=='gpx'?s.up:st.up*g.scale),dmoins:Math.round(id==='utbv'&&prof.src!=='gpx'?s.down:st.down*g.dscale),alt:[Math.round(st.a0),Math.round(st.a1)]};
     if(s.note)o.note=s.note;if(s.pace)o.allure_brief=s.pace;if(s.fc)o.fc=s.fc;
     if(prof.src==='strava'&&st.t!=null){o.temps=fmtDur(st.t,true);o.allure=fmtPace(st.t/(s.to-s.from));if(st.hr)o.fc_moy=Math.round(st.hr)}return o});
   const out={...base,source:src,distance_km:+total.toFixed(2),dplus:Math.round(g.total),dmoins:g.totalDown?Math.round(g.totalDown):null,
     alt_min:Math.round(Math.min(...pts.map(p=>p.alt))),alt_max:Math.round(Math.max(...pts.map(p=>p.alt))),troncons};
   if(id==='saintelyon'){out.temps_cible=fmtDur(S.slTarget);out.decoupage_affiche=S.cut==='terrain'?'dénivelé':'ravitos';
+    out.pauses_ravitos=S.countStops?Object.fromEntries(SL_RAVITOS.map(r=>[r.short,((S.stops||{})[r.short]||0)+' min'])):'non comptées';
     if(withProfile){out.segments_denivele=slPlan(prof,g,S.slTarget,'terrain').map(r=>({de:+r.from.toFixed(1),a:+r.to.toFixed(1),type:r.type,pente_pct:+r.grade.toFixed(1),dplus:Math.round(r.up),dmoins:Math.round(r.down),allure:fmtPace(r.sec/r.km),modifiee:r.custom||undefined,passage:fmtDur(r.cum)}))}
     if(troncons.length){const last=slPlan(prof,g,S.slTarget,S.cut);out.temps_final_plan=fmtDur(last[last.length-1].cum)}
     if(prof.builtin){const plan=slPlan(prof,g,S.slTarget,S.cut);
@@ -1428,7 +1439,7 @@ function courseData(id,withProfile=false){
 }
 function coursesForPrompt(){
   return RACE_LIST.map(r=>{const c=courseData(r.id);if(!c)return '';
-    const tr=(c.troncons||[]).map(t=>`${t.de}-${t.a} km +${t.dplus}/-${t.dmoins}${t.nom?' '+t.nom:''}${(t.allure_cible||t.allure_plan)?' allure '+(t.allure_cible||t.allure_plan)+'/km'+(t.allure_modifiee?' (modifiée par Noa)':''):''}${t.passage?' passage '+t.passage:''}${t.barriere_gpx?' barrière GPX '+t.barriere_gpx:''}${t.temps?' réalisé '+t.temps+' FC '+(t.fc_moy||'?'):''}`).join(' | ');
+    const tr=(c.troncons||[]).map(t=>`${t.de}-${t.a} km +${t.dplus}/-${t.dmoins}${t.nom?' '+t.nom:''}${(t.allure_cible||t.allure_plan)?' allure '+(t.allure_cible||t.allure_plan)+'/km'+(t.allure_modifiee?' (modifiée par Noa)':''):''}${t.passage?' arrivée '+t.passage:''}${t.pause_min?' pause '+t.pause_min+' min':''}${t.barriere_gpx?' barrière GPX '+t.barriere_gpx:''}${t.temps?' réalisé '+t.temps+' FC '+(t.fc_moy||'?'):''}`).join(' | ');
     const extra=(c.lieux_cles?`\n  Lieux clés : ${c.lieux_cles.map(l=>`km ${l.km} ${l.lieu} (${l.alt} m, passage ${l.passage}${l.barriere_gpx?', barrière GPX '+l.barriere_gpx:''})`).join(' | ')}`:'')+(c.montees?`\n  Montées : ${c.montees.map(m=>`km ${m.km} +${m.dplus} m à ${m.pente_pct} %`).join(' | ')}`:'');
     return `- ${c.nom} : ${c.distance_km} km, ${c.dplus} D+${c.dmoins?', '+c.dmoins+' D-':''}${c.alt_min!=null?', alt '+c.alt_min+'-'+c.alt_max+' m':''}. Source : ${c.source}.${c.temps_cible?' Temps cible du dashboard : '+c.temps_cible+'.':''}${c.temps_final_plan?' Temps final avec les allures du plan : '+c.temps_final_plan+'.':''}\n  Tronçons : ${tr}${extra}`}).filter(Boolean).join('\n');
 }
@@ -1726,7 +1737,10 @@ Pour sport_type : "Run", "Ride", ou "Foot" si l'activité s'appelle "Foot". Tout
 let resetArmed=null;
 function currentPlan(race){if(race==='utbv')return utbvPlan(S.utbvTarget);const prof=raceProfile('saintelyon');return slPlan(prof,profileGain(prof,RACES.saintelyon),S.slTarget,race==='saintelyon-terrain'?'terrain':'rav')}
 function setPace(race,i,secPerKm){S.paces=S.paces||{};S.paces[race]=S.paces[race]||{};S.paces[race][i]=secPerKm;save();const y=scrollY;render();scrollTo(0,y)}
-document.addEventListener('change',e=>{const el=e.target;if(!el.dataset||!el.dataset.pacein)return;const [race,i]=el.dataset.pacein.split(':');
+document.addEventListener('change',e=>{const el=e.target;
+  if(el.id==='countStops'){S.countStops=el.checked;save();const y=scrollY;render();scrollTo(0,y);return}
+  if(el.dataset&&el.dataset.stop){const v=Math.max(0,Math.min(60,Math.round(+el.value||0)));S.stops={...(S.stops||{}),[el.dataset.stop]:v};save();el.blur();const y=scrollY;render();scrollTo(0,y);return}
+  if(!el.dataset||!el.dataset.pacein)return;const [race,i]=el.dataset.pacein.split(':');
   const v=parsePace(el.value);if(!isFinite(v)||v<150||v>1800){toast('Allure invalide : écris m:ss, par exemple 7:30','err');el.value=fmtPace((()=>{const r=currentPlan(race)[+i];return r.sec/r.km})());return}
   el.blur();setPace(race,+i,v)});
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.pacein){e.preventDefault();e.target.dispatchEvent(new Event('change',{bubbles:true}))}});
