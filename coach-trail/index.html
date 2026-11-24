@@ -210,6 +210,13 @@ td.r,th.r{text-align:right}
 .info{background:#eef4ff;border-radius:10px;padding:10px 12px;color:#1e3a8a;font-size:13px}
 .empty{padding:28px;text-align:center;color:var(--muted)}
 .hide{display:none !important}
+.pace{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--line);border-radius:9px;padding:2px;background:#fff}
+.pace.on{border-color:var(--orange);background:var(--orange-s)}
+.pbtn{border:0;background:var(--line2);border-radius:7px;width:26px;height:26px;font-weight:700;cursor:pointer;line-height:1}
+.pbtn:hover{background:#e4e6ea}
+.pin{width:52px;border:0;background:transparent;text-align:center;font-weight:700;font-size:13px;padding:2px 0}
+.pin:focus{outline:2px solid var(--orange);border-radius:6px}
+tr.custom td{background:#fffaf6}
 .profwrap{overflow-x:auto;margin:0 -4px;padding:0 4px}
 @media (max-width:700px){.profwrap #prof{min-width:720px}}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom, 0px));transform:translate(-50%,20px);background:#111827;color:#fff;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.2);opacity:0;pointer-events:none;transition:opacity .15s,transform .15s;z-index:60;max-width:calc(100vw - 32px)}
@@ -585,19 +592,19 @@ function hideTip(){tipEl.style.opacity=0}
    ÉTAT
    ========================================================= */
 const S = {
-  tab:'dash', planWeek:null, editMode:false, raceId:'saintelyon', utbvTarget:325*60, slTarget:660*60,
+  tab:'dash', planWeek:null, editMode:false, raceId:'saintelyon', utbvTarget:325*60, slTarget:660*60, paces:{},
   edits:{}, uploads:{}, activities:null, shoesKm:{}, shoesExtra:[], syncedAt:null, syncSource:'snapshot',
   chat:[], chatBusy:false, strava:{status:'off',msg:''}
 };
 const STORE_KEY='coachtrail:v1';
 async function loadState(){
   const d = await store.get(STORE_KEY);
-  if(d){Object.assign(S,{edits:d.edits||{},uploads:d.uploads||{},activities:d.activities||null,shoesKm:d.shoesKm||{},shoesExtra:d.shoesExtra||[],syncedAt:d.syncedAt||null,syncSource:d.syncSource||'snapshot',utbvTarget:d.utbvTarget||S.utbvTarget,slTarget:d.slTarget||S.slTarget,chat:d.chat||[]})}
+  if(d){Object.assign(S,{edits:d.edits||{},uploads:d.uploads||{},activities:d.activities||null,shoesKm:d.shoesKm||{},shoesExtra:d.shoesExtra||[],syncedAt:d.syncedAt||null,syncSource:d.syncSource||'snapshot',utbvTarget:d.utbvTarget||S.utbvTarget,slTarget:d.slTarget||S.slTarget,paces:d.paces||{},chat:d.chat||[]})}
 }
 let saveT=null;
 function save(){clearTimeout(saveT);saveT=setTimeout(()=>{
   let chat=S.chat.slice(-40);
-  const pack=()=>({edits:S.edits,uploads:S.uploads,activities:S.activities,shoesKm:S.shoesKm,shoesExtra:S.shoesExtra,syncedAt:S.syncedAt,syncSource:S.syncSource,utbvTarget:S.utbvTarget,slTarget:S.slTarget,chat});
+  const pack=()=>({edits:S.edits,uploads:S.uploads,activities:S.activities,shoesKm:S.shoesKm,shoesExtra:S.shoesExtra,syncedAt:S.syncedAt,syncSource:S.syncSource,utbvTarget:S.utbvTarget,slTarget:S.slTarget,paces:S.paces,chat});
   /* limite 256 Ko par document : on raccourcit le chat si besoin */
   while(chat.length&&JSON.stringify(pack()).length>230000)chat=chat.slice(2);
   store.set(STORE_KEY,pack());
@@ -1141,11 +1148,10 @@ function renderGpx(){
   const P=profileSVG(pts,{sections:secs,markers,bands});lastGeom=P;
   let strat='',head='';
   if(id==='utbv'){
-    const baseSec=UTBV_SECTIONS.map(s=>parsePace(s.pace)*(s.to-s.from));const baseTot=baseSec.reduce((a,b)=>a+b,0);
-    const f=S.utbvTarget/baseTot;let cum=0;
-    const rows=UTBV_SECTIONS.map((s,i)=>{const st=prof.src==='gpx'?statsBetween(pts,g,s.from,s.to):null;const sec=baseSec[i]*f;cum+=sec;
-      return `<tr><td class="num"><b>${s.from}→${fmtKm(s.to,1)}</b></td><td class="r num">+${st?Math.round(st.up):s.up}<br><span class="muted">-${st?Math.round(st.down):s.down}</span></td>
-        <td class="r num"><b>${fmtPace(parsePace(s.pace)*f)}</b><br><span class="muted">${s.pace}</span></td><td class="num">${s.fc}</td><td class="r num">${fmtDur(sec)}</td><td class="r num"><b>${fmtDur(cum)}</b></td><td>${esc(s.note)}</td></tr>`}).join('');
+    const plan=utbvPlan(S.utbvTarget);const baseTot=plan[0].baseTot;
+    const rows=plan.map(r=>{const st=prof.src==='gpx'?statsBetween(pts,g,r.from,r.to):null;
+      return `<tr class="${r.custom?'custom':''}"><td class="num"><b>${r.from}→${fmtKm(r.to,1)}</b></td><td class="r num">+${st?Math.round(st.up):r.up}<br><span class="muted">-${st?Math.round(st.down):r.down}</span></td>
+        <td class="r">${paceCell('utbv',r)}<span class="muted small">brief ${r.pace}</span></td><td class="num">${r.fc}</td><td class="r num">${fmtDur(r.sec)}</td><td class="r num"><b>${fmtDur(r.cum)}</b></td><td>${esc(r.note)}</td></tr>`}).join('');
     head=`<div class="card"><h2>Stratégie de course<span class="r">temps cible ${fmtDur(S.utbvTarget)}</span></h2>
       <div class="row"><span class="small muted">4h50</span><input type="range" min="${290*60}" max="${370*60}" step="60" value="${S.utbvTarget}" id="utbvT" style="flex:1"><span class="small muted">6h10</span></div>
       <div class="grid g3" style="margin-top:12px;gap:10px">
@@ -1154,14 +1160,15 @@ function renderGpx(){
         <div class="stat"><div class="l">Modèle Monteynard</div><div class="v">${fmtDur(predict(R.km,R.dplus,'monteynard'))}</div></div>
       </div>
       <div class="warn" style="margin-top:12px">Les allures par tronçon du brief totalisent <b>${fmtDur(baseTot)}</b>, au-dessus de la prédiction ${R.prediction}. Le curseur garde la même répartition d'effort et ajuste les allures au temps cible. Le TdlM était couru en contrôle : viser 5h25 au départ, accélérer après le km 35 si les jambes répondent.</div>
-      <div class="tw" style="margin-top:12px"><table><thead><tr><th>Tronçon km</th><th class="r">D+ / D-</th><th class="r">Allure cible<br><span style="font-weight:500">brief</span></th><th>FC</th><th class="r">Temps</th><th class="r">Passage</th><th>Consigne</th></tr></thead><tbody>${rows}</tbody></table></div>
+      ${paceSummary('utbv',plan,S.utbvTarget,null)}
+      <div class="tw" style="margin-top:12px"><table><thead><tr><th>Tronçon km</th><th class="r">D+ / D-</th><th class="r">Allure /km</th><th>FC</th><th class="r">Temps</th><th class="r">Passage</th><th>Consigne</th></tr></thead><tbody>${rows}</tbody></table></div>
     </div>`;
     strat=`<div class="card"><h2>Nutrition UTBV</h2>${kvTable(NUTRITION.utbv)}<h3>Avant course (J-3)</h3>${kvTable(NUTRITION.pre)}</div>`;
   } else if(id==='saintelyon'){
     const plan=slPlan(prof,g,S.slTarget);
-    const rows=plan.map(r=>`<tr><td class="num"><b>${fmtKm(r.from,1)}→${fmtKm(r.to,1)}</b><br><span class="muted">${esc(r.note)}</span></td>
+    const rows=plan.map(r=>`<tr class="${r.custom?'custom':''}"><td class="num"><b>${fmtKm(r.from,1)}→${fmtKm(r.to,1)}</b><br><span class="muted">${esc(r.note)}</span></td>
       <td class="r num">${fmtKm(r.km,1)}</td><td class="r num">+${fmtInt(r.up)}<br><span class="muted">-${fmtInt(r.down)}</span></td><td class="r num">${r.a0} → ${r.a1}</td>
-      <td class="r num"><b>${fmtPace(r.sec/r.km)}</b></td><td class="r num">${fmtDur(r.sec)}</td><td class="r num"><b>${fmtDur(r.cum)}</b><br><span class="muted">${r.clock}</span></td><td class="small">${r.rav&&r.rav.cutoff?'Barrière '+esc(r.rav.cutoff):''}</td></tr>`).join('');
+      <td class="r">${paceCell('saintelyon',r)}</td><td class="r num">${fmtDur(r.sec)}</td><td class="r num"><b>${fmtDur(r.cum)}</b><br><span class="muted">${r.clock}</span></td><td class="small">${r.rav&&r.rav.cutoff?'Barrière '+esc(r.rav.cutoff):''}</td></tr>`).join('');
     head=`<div class="card"><h2>Stratégie de course<span class="r">temps cible ${fmtDur(S.slTarget)} · départ 23h30</span></h2>
       <div class="row"><span class="small muted">9h30</span><input type="range" min="${570*60}" max="${780*60}" step="300" value="${S.slTarget}" id="slT" style="flex:1"><span class="small muted">13h00</span></div>
       <div class="grid g3" style="margin-top:12px;gap:10px">
@@ -1169,11 +1176,12 @@ function renderGpx(){
         <div class="stat"><div class="l">Modèle TdlM</div><div class="v">${fmtDur(predict(R.km,R.dplus,'tdlm'))}</div></div>
         <div class="stat"><div class="l">Modèle Monteynard</div><div class="v">${fmtDur(predict(R.km,R.dplus,'monteynard'))}</div></div>
       </div>
+      ${paceSummary('saintelyon',plan,S.slTarget,new Date(2026,10,28,23,30))}
       <div class="info" style="margin-top:12px">Temps réparti par km-effort (km + D+/100 + D-/300) avec une fatigue qui croît jusqu'à +25 % en fin de course. Les barrières sont reprises du GPX : vérifie sur le règlement s'il s'agit de l'heure ou du temps de course.</div>
-      <div class="tw" style="margin-top:12px"><table><thead><tr><th>Tronçon</th><th class="r">km</th><th class="r">D+ / D-</th><th class="r">Altitude</th><th class="r">Allure</th><th class="r">Temps</th><th class="r">Passage<br><span style="font-weight:500">heure</span></th><th>GPX</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="tw" style="margin-top:12px"><table><thead><tr><th>Tronçon</th><th class="r">km</th><th class="r">D+ / D-</th><th class="r">Altitude</th><th class="r">Allure /km</th><th class="r">Temps</th><th class="r">Passage<br><span style="font-weight:500">heure</span></th><th>GPX</th></tr></thead><tbody>${rows}</tbody></table></div>
     </div>`;
     const kp=slKeyPoints(prof,plan);
-    head+=`<div class="card" style="margin-top:16px"><h2>Lieux clés et ravitos<span class="r">passages pour ${fmtDur(S.slTarget)}</span></h2>
+    head+=`<div class="card" style="margin-top:16px"><h2>Lieux clés et ravitos<span class="r">passages du plan · arrivée en ${fmtDur(plan[plan.length-1].cum)}</span></h2>
       <div class="tw"><table><thead><tr><th class="r">km</th><th>Lieu</th><th class="r">Altitude</th><th class="r">Temps</th><th class="r">Heure</th><th>Barrière GPX</th></tr></thead><tbody>${kp.map(p=>`<tr>
         <td class="r num"><b>${fmtKm(p.km,1)}</b></td><td><span class="dot" style="background:${MARK_COLORS[p.kind]};margin-right:6px"></span><b>${esc(p.label)}</b>${p.kind==='rav'?' <span class="pill">Ravito</span>':''}</td>
         <td class="r num">${p.alt} m</td><td class="r num">${p.km?fmtDur(p.sec):'0'}</td><td class="r num">${p.clock}</td><td class="small">${p.rav&&p.rav.cutoff?esc(p.rav.cutoff):''}</td></tr>`).join('')}</tbody></table></div>
@@ -1226,8 +1234,30 @@ function slPlan(prof,g,target){
   const rows=secs.map(s=>{const st=statsBetween(pts,g,s.from,s.to);const km=s.to-s.from;const up=st.up*g.scale,down=st.down*g.dscale;
     const w=(km+up/100+down/300)*(1+0.25*((s.from+s.to)/2)/total);return {...s,km,up,down,a0:Math.round(st.a0),a1:Math.round(st.a1),w}});
   const W=rows.reduce((a,r)=>a+r.w,0);let cum=0;
-  return rows.map(r=>{const sec=target*r.w/W;cum+=sec;const t=new Date(2026,10,28,23,30);t.setSeconds(t.getSeconds()+cum);
-    return {...r,sec,cum,clock:`${String(t.getHours()).padStart(2,'0')}h${String(t.getMinutes()).padStart(2,'0')}`}});
+  const ov=(S.paces&&S.paces.saintelyon)||{};
+  return rows.map((r,i)=>{const custom=ov[i]!=null;const sec=custom?ov[i]*r.km:target*r.w/W;cum+=sec;const t=new Date(2026,10,28,23,30);t.setSeconds(t.getSeconds()+cum);
+    return {...r,i,sec,cum,custom,clock:`${String(t.getHours()).padStart(2,'0')}h${String(t.getMinutes()).padStart(2,'0')}`}});
+}
+/* Plan UTBV : allures du brief ramenées au temps cible, sauf tronçons modifiés à la main */
+function utbvPlan(target){
+  const base=UTBV_SECTIONS.map(s=>parsePace(s.pace)*(s.to-s.from));const baseTot=base.reduce((a,b)=>a+b,0);const f=target/baseTot;
+  const ov=(S.paces&&S.paces.utbv)||{};let cum=0;
+  return UTBV_SECTIONS.map((s,i)=>{const km=s.to-s.from;const custom=ov[i]!=null;const sec=custom?ov[i]*km:base[i]*f;cum+=sec;return {...s,i,km,sec,cum,custom,baseTot}});
+}
+/* Cellule d'allure modifiable : − / + 10 s/km ou saisie m:ss */
+function paceCell(race,r){
+  return `<div class="pace ${r.custom?'on':''}"><button class="pbtn" data-pace="${race}:${r.i}:-10" aria-label="Plus rapide">−</button><input class="pin num" id="pace-${race}-${r.i}" data-pacein="${race}:${r.i}" value="${fmtPace(r.sec/r.km)}" inputmode="numeric" aria-label="Allure tronçon ${r.i+1}"><button class="pbtn" data-pace="${race}:${r.i}:10" aria-label="Plus lent">+</button></div>`;
+}
+function paceSummary(race,plan,target,start){
+  const tot=plan[plan.length-1].cum;const diff=tot-target;const any=plan.some(r=>r.custom);
+  const km=plan.reduce((a,r)=>a+r.km,0);
+  let arr='';if(start){const t=new Date(start.getTime()+tot*1000);arr=` · arrivée ${String(t.getHours()).padStart(2,'0')}h${String(t.getMinutes()).padStart(2,'0')}`}
+  return `<div class="row" style="margin-top:12px;gap:14px">
+    <div class="stat"><div class="l">Temps final</div><div class="v num" style="color:var(--orange)">${fmtDur(tot)}</div></div>
+    <div class="stat"><div class="l">Allure moyenne</div><div class="v num">${fmtPace(tot/km)}/km</div></div>
+    <div class="stat"><div class="l">Écart à la cible</div><div class="v num">${Math.abs(diff)<30?'à l\'heure':(diff>0?'+':'−')+fmtDur(Math.abs(diff))}</div></div>
+    <span class="sp"></span>${any?`<button class="btn sm" data-act="resetpace" data-race-id="${race}">Réinitialiser les allures</button>`:''}</div>
+    <div class="small muted" style="margin-top:6px">Change l'allure d'un tronçon avec − / + (10 s/km) ou tape-la (m:ss). Les tronçons modifiés sont en orange et ne bougent plus avec le curseur${arr}.</div>`;
 }
 /* Temps de course et heure de passage à un km donné, d'après le plan */
 function slPassage(plan,km){
@@ -1340,17 +1370,18 @@ function courseData(id,withProfile=false){
   const pts=prof.pts;const g=profileGain(prof,R);const total=pts[pts.length-1].km;
   const src=prof.src==='gpx'?'GPX '+prof.file:prof.src==='strava'?'activité Strava (réalisé)':'profil schématique du brief';
   let troncons;
-  if(id==='saintelyon'){troncons=slPlan(prof,g,S.slTarget).map(r=>({de:+r.from.toFixed(1),a:+r.to.toFixed(1),nom:r.note,km:+r.km.toFixed(1),dplus:Math.round(r.up),dmoins:Math.round(r.down),alt:[r.a0,r.a1],temps_cible:fmtDur(r.sec),allure_cible:fmtPace(r.sec/r.km),passage:fmtDur(r.cum)+' ('+r.clock+')',barriere_gpx:r.rav&&r.rav.cutoff||null}))}
+  if(id==='saintelyon'){troncons=slPlan(prof,g,S.slTarget).map(r=>({de:+r.from.toFixed(1),a:+r.to.toFixed(1),nom:r.note,km:+r.km.toFixed(1),dplus:Math.round(r.up),dmoins:Math.round(r.down),alt:[r.a0,r.a1],temps_cible:fmtDur(r.sec),allure_cible:fmtPace(r.sec/r.km),allure_modifiee:r.custom||undefined,passage:fmtDur(r.cum)+' ('+r.clock+')',barriere_gpx:r.rav&&r.rav.cutoff||null}))}
   else troncons=sectionsFor(id,prof).map(s=>{const st=statsBetween(pts,g,s.from,s.to);const o={de:+s.from.toFixed(1),a:+s.to.toFixed(1),dplus:Math.round(id==='utbv'&&prof.src!=='gpx'?s.up:st.up*g.scale),dmoins:Math.round(id==='utbv'&&prof.src!=='gpx'?s.down:st.down*g.dscale),alt:[Math.round(st.a0),Math.round(st.a1)]};
     if(s.note)o.note=s.note;if(s.pace)o.allure_brief=s.pace;if(s.fc)o.fc=s.fc;
     if(prof.src==='strava'&&st.t!=null){o.temps=fmtDur(st.t,true);o.allure=fmtPace(st.t/(s.to-s.from));if(st.hr)o.fc_moy=Math.round(st.hr)}return o});
   const out={...base,source:src,distance_km:+total.toFixed(2),dplus:Math.round(g.total),dmoins:g.totalDown?Math.round(g.totalDown):null,
     alt_min:Math.round(Math.min(...pts.map(p=>p.alt))),alt_max:Math.round(Math.max(...pts.map(p=>p.alt))),troncons};
-  if(id==='saintelyon'){out.temps_cible=fmtDur(S.slTarget);
+  if(id==='saintelyon'){out.temps_cible=fmtDur(S.slTarget);if(troncons.length){const last=slPlan(prof,g,S.slTarget);out.temps_final_plan=fmtDur(last[last.length-1].cum)}
     if(prof.builtin){const plan=slPlan(prof,g,S.slTarget);
       out.lieux_cles=slKeyPoints(prof,plan).map(p=>({km:p.km,lieu:p.label,type:p.kind==='rav'?'ravito':p.kind==='top'?'point culminant':'départ/arrivée',alt:p.alt,passage:p.km?fmtDur(p.sec)+' ('+p.clock+')':'23h30',barriere_gpx:p.rav&&p.rav.cutoff||null}));
       out.montees=SL_CLIMBS.map(c=>({km:c.from+'-'+c.to,dplus:c.gain,pente_pct:c.pct}))}}
-  if(id==='utbv')out.temps_cible=fmtDur(S.utbvTarget);
+  if(id==='utbv'){out.temps_cible=fmtDur(S.utbvTarget);const up=utbvPlan(S.utbvTarget);out.temps_final_plan=fmtDur(up[up.length-1].cum);
+    out.troncons.forEach((t,i)=>{if(up[i]){t.allure_plan=fmtPace(up[i].sec/up[i].km);t.passage=fmtDur(up[i].cum);if(up[i].custom)t.allure_modifiee=true}})}
   if(R.time)out.temps_realise=R.time;
   if(withProfile){const prof1=[];let next=0;for(const q of pts){if(q.km>=next-1e-6){prof1.push([+q.km.toFixed(1),Math.round(q.alt)]);next+=1}}
     const last=pts[pts.length-1];prof1.push([+last.km.toFixed(2),Math.round(last.alt)]);out.profil_1km=prof1}
@@ -1358,9 +1389,9 @@ function courseData(id,withProfile=false){
 }
 function coursesForPrompt(){
   return RACE_LIST.map(r=>{const c=courseData(r.id);if(!c)return '';
-    const tr=(c.troncons||[]).map(t=>`${t.de}-${t.a} km +${t.dplus}/-${t.dmoins}${t.nom?' '+t.nom:''}${t.passage?' passage '+t.passage:''}${t.barriere_gpx?' barrière GPX '+t.barriere_gpx:''}${t.temps?' réalisé '+t.temps+' FC '+(t.fc_moy||'?'):''}`).join(' | ');
+    const tr=(c.troncons||[]).map(t=>`${t.de}-${t.a} km +${t.dplus}/-${t.dmoins}${t.nom?' '+t.nom:''}${(t.allure_cible||t.allure_plan)?' allure '+(t.allure_cible||t.allure_plan)+'/km'+(t.allure_modifiee?' (modifiée par Noa)':''):''}${t.passage?' passage '+t.passage:''}${t.barriere_gpx?' barrière GPX '+t.barriere_gpx:''}${t.temps?' réalisé '+t.temps+' FC '+(t.fc_moy||'?'):''}`).join(' | ');
     const extra=(c.lieux_cles?`\n  Lieux clés : ${c.lieux_cles.map(l=>`km ${l.km} ${l.lieu} (${l.alt} m, passage ${l.passage}${l.barriere_gpx?', barrière GPX '+l.barriere_gpx:''})`).join(' | ')}`:'')+(c.montees?`\n  Montées : ${c.montees.map(m=>`km ${m.km} +${m.dplus} m à ${m.pente_pct} %`).join(' | ')}`:'');
-    return `- ${c.nom} : ${c.distance_km} km, ${c.dplus} D+${c.dmoins?', '+c.dmoins+' D-':''}${c.alt_min!=null?', alt '+c.alt_min+'-'+c.alt_max+' m':''}. Source : ${c.source}.${c.temps_cible?' Temps cible du dashboard : '+c.temps_cible+'.':''}\n  Tronçons : ${tr}${extra}`}).filter(Boolean).join('\n');
+    return `- ${c.nom} : ${c.distance_km} km, ${c.dplus} D+${c.dmoins?', '+c.dmoins+' D-':''}${c.alt_min!=null?', alt '+c.alt_min+'-'+c.alt_max+' m':''}. Source : ${c.source}.${c.temps_cible?' Temps cible du dashboard : '+c.temps_cible+'.':''}${c.temps_final_plan?' Temps final avec les allures du plan : '+c.temps_final_plan+'.':''}\n  Tronçons : ${tr}${extra}`}).filter(Boolean).join('\n');
 }
 function systemPrompt(){
   const cw=currentWeekNum();
@@ -1654,8 +1685,14 @@ Pour sport_type : "Run", "Ride", ou "Foot" si l'activité s'appelle "Foot". Tout
    ÉVÉNEMENTS GLOBAUX
    ========================================================= */
 let resetArmed=null;
+function currentPlan(race){const prof=raceProfile(race);if(race==='utbv')return utbvPlan(S.utbvTarget);return slPlan(prof,profileGain(prof,RACES[race]),S.slTarget)}
+function setPace(race,i,secPerKm){S.paces=S.paces||{};S.paces[race]=S.paces[race]||{};S.paces[race][i]=secPerKm;save();const y=scrollY;render();scrollTo(0,y)}
+document.addEventListener('change',e=>{const el=e.target;if(!el.dataset||!el.dataset.pacein)return;const [race,i]=el.dataset.pacein.split(':');
+  const v=parsePace(el.value);if(!isFinite(v)||v<150||v>1800){toast('Allure invalide : écris m:ss, par exemple 7:30','err');el.value=fmtPace((()=>{const r=currentPlan(race)[+i];return r.sec/r.km})());return}
+  el.blur();setPace(race,+i,v)});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.pacein){e.preventDefault();e.target.dispatchEvent(new Event('change',{bubbles:true}))}});
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-tab],[data-week],[data-goplan],[data-done],[data-act],[data-race],[data-race-go],[data-mv],[data-q]');
+  const t=e.target.closest('[data-tab],[data-week],[data-goplan],[data-done],[data-act],[data-race],[data-race-go],[data-mv],[data-q],[data-pace]');
   if(!t)return;
   if(t.dataset.tab) return go(t.dataset.tab);
   if(t.dataset.week){S.planWeek=+t.dataset.week;return render()}
@@ -1666,7 +1703,9 @@ document.addEventListener('click',e=>{
   if(t.dataset.mv){const [i,d]=t.dataset.mv.split(':').map(Number);return swapSessions(S.planWeek,i,i+d)}
   if(t.dataset.done){const [w,i]=t.dataset.done.split(':').map(Number);const wk=getWeek(w);const s=wk.sessions[i];const E=ensureEdit(w);
     E.days[i]=E.days[i]||{};E.days[i].done=!s.done;save();return render()}
+  if(t.dataset.pace){const [race,i,d]=t.dataset.pace.split(':');const r=currentPlan(race)[+i];if(!r)return;setPace(race,+i,Math.max(150,Math.round(r.sec/r.km)+(+d)));return}
   const a=t.dataset.act;
+  if(a==='resetpace'){const race=t.dataset.raceId;if(S.paces)delete S.paces[race];save();const y=scrollY;render();scrollTo(0,y);toast('Allures réinitialisées');return}
   if(a==='edit'){S.editMode=!S.editMode;return render()}
   if(a==='resetweek'){
     /* confirmation en deux clics : le viewer bloque les boîtes de dialogue */
