@@ -1153,7 +1153,7 @@ function renderGpx(){
   const terrain = canCut&&S.cut==='terrain';
   const secs = terrain? terrainSegments(prof,g,cutsFor(id,prof)) : sectionsFor(id,prof);
   const markers = id==='utbv'?UTBV_MARKERS.map(m=>({...m,kind:'rav'})):id==='saintelyon'?SL_POI:[];
-  const bands = !terrain&&id==='saintelyon'&&prof.builtin?SL_CLIMBS.map(c=>({from:c.from,to:c.to,label:'+'+c.gain})):[];
+  const bands = !terrain&&id==='saintelyon'&&slCourse(prof)?SL_CLIMBS.map(c=>({from:c.from,to:c.to,label:'+'+c.gain})):[];
   const P=profileSVG(pts,{sections:secs,markers,bands});lastGeom=P;
   let strat='',head='';
   if(id==='utbv'){
@@ -1270,10 +1270,12 @@ function terrainSegments(prof,g,cuts=[]){
     for(let i=1;i<seg.length;i++){const p=seg[i-1],c=seg[i];if(isCut(c.from))continue;
       if(p.type===c.type||(c.to-c.from)<0.6||(p.to-p.from)<0.6){p.to=c.to;p.type=typeOf(p.from,p.to);seg.splice(i,1);changed=true;break}}}
   return seg.map(x=>{const st=statsBetween(pts,g,x.from,x.to);const gr=(st.up*g.scale-st.down*g.dscale)/((x.to-x.from)*10);
-    const rav=SL_RAVITOS.find(r=>prof.builtin&&Math.abs(r.km-x.to)<1e-6)||null;
+    const rav=SL_RAVITOS.find(r=>cuts.includes(r.km)&&Math.abs(r.km-x.to)<1e-6)||null;
     return {...x,grade:gr,rav,note:x.type+' '+(gr>0?'+':'')+gr.toFixed(1).replace('.',',')+' %'+(rav?' → '+rav.short+' '+rav.name:'')}});
 }
-function cutsFor(id,prof){return id==='saintelyon'&&prof.builtin?SL_RAVITOS.map(r=>r.km):[]}
+/* Trace de la Sainté-Lyon : la trace intégrée, ou un GPX importé de même longueur (± 3 km) */
+const slCourse=prof=>!!prof&&(prof.builtin||Math.abs(prof.pts[prof.pts.length-1].km-RACES.saintelyon.km)<3);
+function cutsFor(id,prof){return id==='saintelyon'&&slCourse(prof)?SL_RAVITOS.map(r=>r.km):[]}
 const slKey=mode=>mode==='terrain'?'saintelyon-terrain':'saintelyon';
 function slPlan(prof,g,target,mode=S.cut){
   const pts=prof.pts;const total=pts[pts.length-1].km;
@@ -1447,7 +1449,7 @@ function courseData(id,withProfile=false){
     out.pauses_ravitos=S.countStops?Object.fromEntries(SL_RAVITOS.map(r=>[r.short,((S.stops||{})[r.short]||0)+' min'])):'non comptées';
     if(withProfile){out.segments_denivele=slPlan(prof,g,S.slTarget,'terrain').map(r=>({de:+r.from.toFixed(1),a:+r.to.toFixed(1),type:r.type,pente_pct:+r.grade.toFixed(1),dplus:Math.round(r.up),dmoins:Math.round(r.down),allure:fmtPace(r.sec/r.km),modifiee:r.custom||undefined,passage:fmtDur(r.cum)}))}
     if(troncons.length){const last=slPlan(prof,g,S.slTarget,S.cut);out.temps_final_plan=fmtDur(last[last.length-1].cum)}
-    if(prof.builtin){const plan=slPlan(prof,g,S.slTarget,S.cut);
+    if(slCourse(prof)){const plan=slPlan(prof,g,S.slTarget,S.cut);
       out.lieux_cles=slKeyPoints(prof,plan).map(p=>({km:p.km,lieu:p.label,type:p.kind==='rav'?'ravito':p.kind==='top'?'point culminant':'départ/arrivée',alt:p.alt,passage:p.km?fmtDur(p.sec)+' ('+p.clock+')':'23h30',barriere_gpx:p.rav&&p.rav.cutoff||null}));
       out.montees=SL_CLIMBS.map(c=>({km:c.from+'-'+c.to,dplus:c.gain,pente_pct:c.pct}))}}
   if(id==='utbv'){out.temps_cible=fmtDur(S.utbvTarget);const up=utbvPlan(S.utbvTarget);out.temps_final_plan=fmtDur(up[up.length-1].cum);
