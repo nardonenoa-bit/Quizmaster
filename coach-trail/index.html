@@ -598,19 +598,19 @@ function hideTip(){tipEl.style.opacity=0}
    ÉTAT
    ========================================================= */
 const S = {
-  tab:'dash', planWeek:null, editMode:false, raceId:'saintelyon', utbvTarget:325*60, slTarget:660*60, paces:{}, cut:'rav', stops:{R1:2,R2:4,R3:5,R4:4,R5:2}, countStops:true,
+  tab:'dash', planWeek:null, editMode:false, raceId:'saintelyon', utbvTarget:325*60, slTarget:660*60, paces:{}, paceKm:{}, cut:'rav', stops:{R1:2,R2:4,R3:5,R4:4,R5:2}, countStops:true,
   edits:{}, uploads:{}, activities:null, shoesKm:{}, shoesExtra:[], syncedAt:null, syncSource:'snapshot',
   chat:[], chatBusy:false, strava:{status:'off',msg:''}
 };
 const STORE_KEY='coachtrail:v1';
 async function loadState(){
   const d = await store.get(STORE_KEY);
-  if(d){Object.assign(S,{edits:d.edits||{},uploads:d.uploads||{},activities:d.activities||null,shoesKm:d.shoesKm||{},shoesExtra:d.shoesExtra||[],syncedAt:d.syncedAt||null,syncSource:d.syncSource||'snapshot',utbvTarget:d.utbvTarget||S.utbvTarget,slTarget:d.slTarget||S.slTarget,paces:d.paces||{},cut:d.cut||'rav',stops:d.stops||S.stops,countStops:d.countStops!==false,chat:d.chat||[]})}
+  if(d){Object.assign(S,{edits:d.edits||{},uploads:d.uploads||{},activities:d.activities||null,shoesKm:d.shoesKm||{},shoesExtra:d.shoesExtra||[],syncedAt:d.syncedAt||null,syncSource:d.syncSource||'snapshot',utbvTarget:d.utbvTarget||S.utbvTarget,slTarget:d.slTarget||S.slTarget,paces:d.paces||{},paceKm:d.paceKm||{},cut:d.cut||'rav',stops:d.stops||S.stops,countStops:d.countStops!==false,chat:d.chat||[]})}
 }
 let saveT=null;
 function save(){clearTimeout(saveT);saveT=setTimeout(()=>{
   let chat=S.chat.slice(-40);
-  const pack=()=>({edits:S.edits,uploads:S.uploads,activities:S.activities,shoesKm:S.shoesKm,shoesExtra:S.shoesExtra,syncedAt:S.syncedAt,syncSource:S.syncSource,utbvTarget:S.utbvTarget,slTarget:S.slTarget,paces:S.paces,cut:S.cut,stops:S.stops,countStops:S.countStops,chat});
+  const pack=()=>({edits:S.edits,uploads:S.uploads,activities:S.activities,shoesKm:S.shoesKm,shoesExtra:S.shoesExtra,syncedAt:S.syncedAt,syncSource:S.syncSource,utbvTarget:S.utbvTarget,slTarget:S.slTarget,paces:S.paces,paceKm:S.paceKm,cut:S.cut,stops:S.stops,countStops:S.countStops,chat});
   /* limite 256 Ko par document : on raccourcit le chat si besoin */
   while(chat.length&&JSON.stringify(pack()).length>230000)chat=chat.slice(2);
   store.set(STORE_KEY,pack());
@@ -1276,6 +1276,23 @@ function terrainSegments(prof,g,cuts=[]){
 /* Trace de la Sainté-Lyon : la trace intégrée, ou un GPX importé de même longueur (± 3 km) */
 const slCourse=prof=>!!prof&&(prof.builtin||Math.abs(prof.pts[prof.pts.length-1].km-RACES.saintelyon.km)<3);
 function cutsFor(id,prof){return id==='saintelyon'&&slCourse(prof)?SL_RAVITOS.map(r=>r.km):[]}
+/* Allures modifiées : rangées par plage de km (du-au), pas par numéro de segment,
+   pour qu'un nouveau découpage ne les décale pas. */
+const rangeKey=r=>r.from.toFixed(2)+'-'+r.to.toFixed(2);
+function paceFor(key,r){
+  const m=(S.paceKm||{})[key];if(!m)return null;const k=rangeKey(r);if(m[k]!=null)return m[k];
+  const mid=(r.from+r.to)/2;let best=null,bw=1e9;
+  for(const [kk,v] of Object.entries(m)){const [a,b]=kk.split('-').map(Number);if(mid>=a&&mid<=b&&b-a<bw){best=v;bw=b-a}}
+  return best;
+}
+/* Ancien format (par numéro de segment) : converti en plages de km avec le découpage d'origine */
+function migratePaces(key,prof,g,mode){
+  const old=S.paces&&S.paces[key];if(!old||!Object.keys(old).length)return;
+  const legacy=mode==='terrain'?terrainSegments(prof,g,prof.builtin?SL_RAVITOS.map(r=>r.km):[]):sectionsFor('saintelyon',prof);
+  S.paceKm=S.paceKm||{};const m=S.paceKm[key]=S.paceKm[key]||{};
+  for(const [i,v] of Object.entries(old)){const sg=legacy[+i];if(sg&&m[rangeKey(sg)]==null)m[rangeKey(sg)]=v}
+  delete S.paces[key];save();
+}
 const slKey=mode=>mode==='terrain'?'saintelyon-terrain':'saintelyon';
 function slPlan(prof,g,target,mode=S.cut){
   const pts=prof.pts;const total=pts[pts.length-1].km;
@@ -1283,11 +1300,11 @@ function slPlan(prof,g,target,mode=S.cut){
   const rows=secs.map(s=>{const st=statsBetween(pts,g,s.from,s.to);const km=s.to-s.from;const up=st.up*g.scale,down=st.down*g.dscale;
     const w=(km+up/100+down/300)*(1+0.25*((s.from+s.to)/2)/total);return {...s,km,up,down,a0:Math.round(st.a0),a1:Math.round(st.a1),w}});
   const W=rows.reduce((a,r)=>a+r.w,0);let cum=0;
-  const ov=(S.paces&&S.paces[slKey(mode)])||{};
+  const key=slKey(mode);migratePaces(key,prof,g,mode);
   /* Pauses aux ravitos : le temps cible reste l'heure d'arrivée, la course hors pauses en est déduite */
   const stopOf=r=>S.countStops&&r.rav?Math.max(0,+(S.stops||{})[r.rav.short]||0)*60:0;
   const stopsTot=rows.reduce((a,r)=>a+stopOf(r),0);const moving=Math.max(target*0.5,target-stopsTot);let stopsDone=0;
-  return rows.map((r,i)=>{const custom=ov[i]!=null;const sec=custom?ov[i]*r.km:moving*r.w/W;cum+=sec;const t=new Date(2026,10,28,23,30);t.setSeconds(t.getSeconds()+cum);
+  return rows.map((r,i)=>{const pv=paceFor(key,r);const custom=pv!=null;const sec=custom?pv*r.km:moving*r.w/W;cum+=sec;const t=new Date(2026,10,28,23,30);t.setSeconds(t.getSeconds()+cum);
     const stopsBefore=stopsDone;const stop=stopOf(r);const row={...r,i,sec,cum,stop,stopsBefore,custom,clock:`${String(t.getHours()).padStart(2,'0')}h${String(t.getMinutes()).padStart(2,'0')}`};cum+=stop;stopsDone+=stop;return row});
 }
 const clockAt=sec=>{const t=new Date(2026,10,28,23,30);t.setSeconds(t.getSeconds()+sec);return `${String(t.getHours()).padStart(2,'0')}h${String(t.getMinutes()).padStart(2,'0')}`};
@@ -1758,7 +1775,9 @@ Pour sport_type : "Run", "Ride", ou "Foot" si l'activité s'appelle "Foot". Tout
    ========================================================= */
 let resetArmed=null;
 function currentPlan(race){if(race==='utbv')return utbvPlan(S.utbvTarget);const prof=raceProfile('saintelyon');return slPlan(prof,profileGain(prof,RACES.saintelyon),S.slTarget,race==='saintelyon-terrain'?'terrain':'rav')}
-function setPace(race,i,secPerKm){S.paces=S.paces||{};S.paces[race]=S.paces[race]||{};S.paces[race][i]=secPerKm;save();const y=scrollY;render();scrollTo(0,y)}
+function setPace(race,i,secPerKm){
+  if(race.startsWith('saintelyon')){const row=currentPlan(race)[i];if(!row)return;S.paceKm=S.paceKm||{};S.paceKm[race]=S.paceKm[race]||{};S.paceKm[race][rangeKey(row)]=secPerKm}
+  else{S.paces=S.paces||{};S.paces[race]=S.paces[race]||{};S.paces[race][i]=secPerKm}save();const y=scrollY;render();scrollTo(0,y)}
 document.addEventListener('change',e=>{const el=e.target;
   if(el.id==='countStops'){S.countStops=el.checked;save();const y=scrollY;render();scrollTo(0,y);return}
   if(el.dataset&&el.dataset.stop){const v=Math.max(0,Math.min(60,Math.round(+el.value||0)));S.stops={...(S.stops||{}),[el.dataset.stop]:v};save();el.blur();const y=scrollY;render();scrollTo(0,y);return}
@@ -1781,7 +1800,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.cut){S.cut=t.dataset.cut;save();const y=scrollY;render();scrollTo(0,y);return}
   if(t.dataset.pace){const [race,i,d]=t.dataset.pace.split(':');const r=currentPlan(race)[+i];if(!r)return;setPace(race,+i,Math.max(150,Math.round(r.sec/r.km)+(+d)));return}
   const a=t.dataset.act;
-  if(a==='resetpace'){const race=t.dataset.raceId;if(S.paces)delete S.paces[race];save();const y=scrollY;render();scrollTo(0,y);toast('Allures réinitialisées');return}
+  if(a==='resetpace'){const race=t.dataset.raceId;if(S.paces)delete S.paces[race];if(S.paceKm)delete S.paceKm[race];save();const y=scrollY;render();scrollTo(0,y);toast('Allures réinitialisées');return}
   if(a==='edit'){S.editMode=!S.editMode;return render()}
   if(a==='resetweek'){
     /* confirmation en deux clics : le viewer bloque les boîtes de dialogue */
