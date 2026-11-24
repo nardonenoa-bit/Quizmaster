@@ -210,6 +210,7 @@ td.r,th.r{text-align:right}
 .info{background:#eef4ff;border-radius:10px;padding:10px 12px;color:#1e3a8a;font-size:13px}
 .empty{padding:28px;text-align:center;color:var(--muted)}
 .hide{display:none !important}
+.ravcell{display:flex;flex-direction:column;gap:1px;min-width:150px;color:#1e3a8a}
 .ravrow td{background:#eef4ff;border-bottom:1px solid #dbe6ff;padding:7px 8px}
 .ravline{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center;font-size:13px;color:#1e3a8a}
 .ravline .dot{margin-right:-8px}
@@ -1176,7 +1177,7 @@ function renderGpx(){
     const plan=slPlan(prof,g,S.slTarget);const key=slKey(S.cut);
     const rows=plan.map(r=>`<tr class="${r.custom?'custom':''}"><td class="num"><b>${fmtKm(r.from,1)}→${fmtKm(r.to,1)}</b><br>${terrain?terrainPill(r)+(r.rav?` <span class="muted">→ ${esc(r.rav.short+' '+r.rav.name)}</span>`:''):`<span class="muted">${esc(r.note)}</span>`}</td>
       <td class="r num">${fmtKm(r.km,1)}</td><td class="r num">+${fmtInt(r.up)}<br><span class="muted">-${fmtInt(r.down)}</span></td><td class="r num">${r.a0} → ${r.a1}</td>
-      <td class="r">${paceCell(key,r)}</td><td class="r num">${fmtDur(r.sec)}</td><td class="r num"><b>${fmtDur(r.cum)}</b><br><span class="muted">${r.clock}</span>${r.stopsBefore?`<br><span class="small muted">dont ${Math.round(r.stopsBefore/60)} min de pauses</span>`:''}${r.stop?`<br><span class="small" style="color:var(--orange-d)"><b>repart ${fmtDur(r.cum+r.stop)}</b> · ${clockAt(r.cum+r.stop)}</span>`:''}</td><td class="small">${r.stop?`<b>Pause ${Math.round(r.stop/60)} min</b><br>`:''}${r.rav&&r.rav.cutoff?'Barrière '+esc(r.rav.cutoff):''}</td></tr>${terrain&&r.rav?ravRow(r):''}`).join('');
+      <td class="r">${paceCell(key,r)}</td><td class="r num">${fmtDur(r.sec)}</td><td class="r num"><b>${fmtDur(r.cum)}</b><br><span class="muted">${r.clock}</span>${r.stopsBefore?`<br><span class="small muted">dont ${Math.round(r.stopsBefore/60)} min de pauses</span>`:''}</td><td class="small">${r.rav?ravCell(r):''}</td></tr>${terrain&&r.rav?ravRow(r):''}`).join('');
     const rowsAll = terrain? `<tr class="ravrow"><td colspan="8"><div class="ravline"><span class="dot" style="background:${MARK_COLORS.end}"></span><b>Départ · Saint-Étienne</b><span>km 0</span><span>départ <b>23h30</b></span></div></td></tr>`+rows
       +`<tr class="ravrow"><td colspan="8"><div class="ravline"><span class="dot" style="background:${MARK_COLORS.end}"></span><b>Arrivée · Lyon</b><span>km ${fmtKm(plan[plan.length-1].to,1)}</span><span>arrivée <b>${fmtDur(plan[plan.length-1].cum)}</b> · ${plan[plan.length-1].clock}</span></div></td></tr>` : rows;
     head=`<div class="card"><h2>Stratégie de course<span class="r">${terrain?plan.length+' segments · ':''}temps cible ${fmtDur(S.slTarget)} · départ 23h30</span></h2>
@@ -1295,6 +1296,13 @@ function utbvPlan(target){
   return UTBV_SECTIONS.map((s,i)=>{const km=s.to-s.from;const custom=ov[i]!=null;const sec=custom?ov[i]*km:base[i]*f;cum+=sec;return {...s,i,km,sec,cum,custom,baseTot}});
 }
 /* Cellule d'allure modifiable : − / + 10 s/km ou saisie m:ss */
+/* Colonne Ravito : nom, arrivée, pause, départ, barrière */
+function ravCell(r){
+  return `<div class="ravcell"><b>${esc(r.rav.short+' · '+r.rav.name)}</b>
+    <span>arrivée <b class="num">${fmtDur(r.cum)}</b> · ${r.clock}</span>
+    ${r.stop?`<span>pause ${Math.round(r.stop/60)} min</span><span style="color:var(--orange-d)">repart <b class="num">${fmtDur(r.cum+r.stop)}</b> · ${clockAt(r.cum+r.stop)}</span>`:''}
+    ${r.rav.cutoff?`<span class="muted">barrière GPX ${esc(r.rav.cutoff)}</span>`:''}</div>`;
+}
 /* Ligne ravito insérée dans le tableau par dénivelé */
 function ravRow(r){
   return `<tr class="ravrow"><td colspan="8"><div class="ravline"><span class="dot" style="background:${MARK_COLORS.rav}"></span><b>${esc(r.rav.short+' · '+r.rav.name)}</b><span>km ${fmtKm(r.to,1)}</span>
