@@ -347,6 +347,22 @@ const SL_RAVITOS = [
   {km:60.3,short:'R4',name:'Soucieu-en-Jarrest',cutoff:'12h00',kind:'solide'},
   {km:66.6,short:'R5',name:'Chaponost',cutoff:'13h30',kind:'solide'}
 ];
+/* Guide accompagnateurs SaintéLyon 2026 (PDF officiel du 18/11/2026, saintelyon.com/accompagnateurs) */
+const SL_CREW_LINKS = {
+  guide:'https://cdn.prod.website-files.com/69431a153154265f304215bb/6afda386ca285f9eb9e2794d_ASTL26_GUIDEACCOMPAGNATEURS-STL.pdf',
+  map:'https://google.com/maps/d/viewer?mid=1mVFJyX_-JWrnlNKLJqNMBjtnlmB6jlo',
+  page:'https://www.saintelyon.com/accompagnateurs',
+  live:'https://saintelyon.livetrail.net/'
+};
+const SL_CREW = [
+  {km:0,name:'Départ · Saint-Étienne',open:true,access:'Rue Dr Henri et Bernard Muller, 42000 Saint-Étienne. Routes barrées autour du départ, parkings indiqués sur le guide.'},
+  {km:17.2,short:'R1',name:'Saint-Christo-en-Jarez',open:true,access:'Depuis Saint-Étienne (stade Geoffroy-Guichard) : route de la Tour, route de Bayard (D1498), puis D3, puis D6 pour arriver au nord du village. Accès par le sud interdit.'},
+  {km:32.1,short:'R2',name:'Sainte-Catherine',open:false,access:'Accès en véhicule strictement interdit : routes fermées à plus de 3 km du bourg. Stationnement interdit le long de la D2.'},
+  {km:45.9,short:'R3',name:'Saint-Genou / Le Camp',open:false,access:'Accès en véhicule strictement interdit : la D34, seule route d\'accès, est totalement fermée. Stationnement interdit le long de la D34.'},
+  {km:60.3,short:'R4',name:'Soucieu-en-Jarrest',open:true,access:'Prendre la D25 au rond-point de Thurins jusqu\'au parking. Zone de confort supporters : braseros, couvertures, café, pizzas.'},
+  {km:66.6,short:'R5',name:'Chaponost',open:true,access:'Prendre la D50 jusqu\'au parking grand public.'},
+  {km:80.65,name:'Arrivée · Lyon',open:true,access:'Repas d\'arrivée à la Halle Tony Garnier (site officiel).'}
+];
 /* Lieux clés de la trace : départ, ravitos (waypoints du GPX), point culminant et arrivée (calculés sur la trace) */
 const SL_POI = [
   {km:0,label:'Départ · Saint-Étienne',kind:'end'},
@@ -1209,6 +1225,7 @@ function renderGpx(){
       <div class="tw"><table><thead><tr><th>km</th><th class="r">D+</th><th class="r">Pente moy.</th><th>Juste avant</th></tr></thead><tbody>${SL_CLIMBS.map(c=>{const nxt=SL_POI.find(p=>p.km>=c.to-0.3);
         return `<tr><td class="num"><b>${fmtKm(c.from,1)} → ${fmtKm(c.to,1)}</b></td><td class="r num">+${c.gain} m</td><td class="r num">${String(c.pct).replace('.',',')} %</td><td class="small">${nxt?esc(nxt.label):''}</td></tr>`}).join('')}</tbody></table></div>
       <div class="small muted" style="margin-top:8px">Ravitos : waypoints du GPX officiel ; type et barrières (heure du dimanche, en sortie de ravito) : règlement saintelyon.com 2026. Point culminant et montées : calculés sur la trace.</div></div>`;
+    head+=crewCard(plan);
     strat=`<div class="card"><h2>Nutrition Sainté-Lyon</h2>${kvTable(NUTRITION.sl)}<p class="small muted" style="margin-bottom:0">${esc(R.notes)}</p></div>`;
   } else {
     const isDone=!!STREAMS[id]&&prof.src==='strava';
@@ -1344,6 +1361,30 @@ function planText(plan){
   plan.forEach(r=>{L.push(`km ${fmtKm(r.from,1)}-${fmtKm(r.to,1)} | ${r.type?r.type+' '+(r.grade>0?'+':'')+r.grade.toFixed(1)+' %':r.note} | +${Math.round(r.up)}/-${Math.round(r.down)} | ${fmtPace(r.sec/r.km)}/km | ${fmtDur(r.sec)} | cumul ${fmtDur(r.cum)} (${r.clock})`);
     if(r.rav)L.push(`  >> ${r.rav.short} ${r.rav.name} : arrivée ${fmtDur(r.cum)} (${r.clock})${r.stop?` · pause ${Math.round(r.stop/60)} min · repart ${fmtDur(r.cum+r.stop)} (${clockAt(r.cum+r.stop)})`:''}${r.rav.cutoff?' · barrière '+r.rav.cutoff:''}`)});
   L.push('',`Arrivée Lyon : ${fmtDur(tot)} (${clockAt(tot)})`);return L.join('\n');
+}
+/* Carte accompagnateurs : où ils peuvent aller, comment, et à quelle heure tu passes */
+function crewCard(plan){
+  const at=km=>{if(km===0)return {clock:'23h30',sec:0};const r=plan.find(x=>Math.abs(x.to-km)<0.05);if(r)return {clock:r.clock,sec:r.cum,stop:r.stop};const ps=slPassage(plan,km);return {clock:ps.clock,sec:ps.sec}};
+  return `<div class="card" style="margin-top:16px"><h2>Guide accompagnateurs<span class="r">règlement et guide officiels 2026</span></h2>
+    <div class="warn">L'assistance aux ravitos est interdite (sauf élites accréditées à Sainte-Catherine et Soucieu). Être accompagné hors des zones spectateurs est interdit, comme suivre en vélo. Ton accompagnateur peut t'encourager, pas te ravitailler. En cas d'incivilité (stationnement sauvage…), le coureur suivi peut perdre son dossard.</div>
+    <div class="tw" style="margin-top:12px"><table><thead><tr><th class="r">km</th><th>Lieu</th><th>Accompagnateurs</th><th class="r">Ton passage</th><th>Accès et parking</th></tr></thead><tbody>${SL_CREW.map(c=>{const a=at(c.km);
+      return `<tr><td class="r num"><b>${fmtKm(c.km,1)}</b></td><td><b>${esc((c.short?c.short+' · ':'')+c.name)}</b></td>
+        <td>${c.open?'<span class="pill g">Accessible</span>':'<span class="pill r">Interdit</span>'}</td>
+        <td class="r num">${c.open?`<b>${a.clock}</b>${c.km?`<br><span class="small muted">${fmtDur(a.sec)} de course</span>`:''}`:'<span class="muted">—</span>'}</td>
+        <td class="small">${esc(c.access)}</td></tr>`}).join('')}</tbody></table></div>
+    <h3>Pour ton accompagnateur</h3>
+    <ul class="small" style="margin:0;padding-left:18px;display:grid;gap:4px">
+      <li>Suivre ta position en direct sur LiveTrail (lien aussi sur la page d'accueil du site le jour J). Installe l'application LiveTrail sur ton téléphone.</li>
+      <li>Emprunter l'itinéraire accompagnateurs et se garer uniquement sur les parkings prévus. Jamais sur une propriété privée, un bord de route ou un champ.</li>
+      <li>Arriver au moins 30 min avant ton heure de passage : il fait froid la nuit, prévoir vêtements chauds et boisson chaude.</li>
+      <li>Meilleur enchaînement : départ Saint-Étienne, R1 Saint-Christo, puis directement Soucieu (zone de confort), Chaponost et l'arrivée. Sainte-Catherine et Saint-Genou sont fermés.</li>
+    </ul>
+    <div class="row" style="margin-top:12px">
+      <a class="btn sm" href="${SL_CREW_LINKS.guide}" target="_blank" rel="noopener">Guide accompagnateurs (PDF)</a>
+      <a class="btn sm" href="${SL_CREW_LINKS.map}" target="_blank" rel="noopener">Itinéraire Google My Maps</a>
+      <a class="btn sm" href="${SL_CREW_LINKS.live}" target="_blank" rel="noopener">Suivi LiveTrail</a>
+      <a class="btn sm" href="${SL_CREW_LINKS.page}" target="_blank" rel="noopener">Page accompagnateurs</a>
+    </div></div>`;
 }
 /* Colonne Ravito : nom, arrivée, pause, départ, barrière */
 function ravCell(r){
@@ -1538,7 +1579,7 @@ OBJECTIFS
 - UTBV 10/10/2026, Cublize : 42,53 km, 2173 D+/D-, alt 317-827, boucle. Prédiction 5h10-5h25. Nutrition : 4 gels (km 10, 17, 23, 28 caféiné) + flasque 500 ml isotonique, 50-60 g glucides/h, sodium 500-700 mg/h.
   Tronçons : ${UTBV_SECTIONS.map(s=>`${s.from}-${s.to} km +${s.up}/-${s.down} allure ${s.pace} : ${s.note}`).join(' | ')}
   Attention : ces allures totalisent ~5h49, au-dessus de la prédiction.
-- Sainté-Lyon 28/11/2026, départ 23h30 Saint-Étienne : 80,65 km, 2209 D+, 2537 D- (trace officielle), alt 164-926 m, nocturne, mixte sentier/bitume. Ravitos : ${SL_RAVITOS.map(r=>r.short+' '+r.name+' km '+r.km+' ('+r.kind+(r.cutoff?', barrière '+r.cutoff+' dimanche en sortie':'')+')').join(', ')}. Règlement 2026 : assistance personnelle interdite aux ravitos (élites seulement à Sainte-Catherine et Soucieu), accompagnement interdit hors zones spectateurs, bâtons interdits, semi-autosuffisance. R3 Saint-Genou est liquide seulement (eau, eau pétillante, coca). Matériel obligatoire : sac ou ceinture, téléphone (LiveTrail recommandé), gobelet 15 cl, 1 L d'eau, frontale + piles, couverture de survie, sifflet, bande élastique, réserve alimentaire, veste imperméable, pièce d'identité ; kit grand froid possible. Prédiction 10h30-12h00. Premier ultra. Nutrition : 500-700 g glucides, gels + isotonique 5 premières heures puis solide tiède (soupe, riz, fromage, coca), bouillons chauds.
+- Sainté-Lyon 28/11/2026, départ 23h30 Saint-Étienne : 80,65 km, 2209 D+, 2537 D- (trace officielle), alt 164-926 m, nocturne, mixte sentier/bitume. Ravitos : ${SL_RAVITOS.map(r=>r.short+' '+r.name+' km '+r.km+' ('+r.kind+(r.cutoff?', barrière '+r.cutoff+' dimanche en sortie':'')+')').join(', ')}. Règlement 2026 : assistance personnelle interdite aux ravitos (élites seulement à Sainte-Catherine et Soucieu), accompagnement interdit hors zones spectateurs, bâtons interdits, semi-autosuffisance. R3 Saint-Genou est liquide seulement (eau, eau pétillante, coca). Guide accompagnateurs : accessibles = départ Saint-Étienne, R1 Saint-Christo (par le nord, D3 puis D6), R4 Soucieu (D25 depuis le rond-point de Thurins, zone de confort supporters), R5 Chaponost (D50, parking grand public), arrivée ; interdits en véhicule = R2 Sainte-Catherine et R3 Saint-Genou. Suivi live sur LiveTrail. Matériel obligatoire : sac ou ceinture, téléphone (LiveTrail recommandé), gobelet 15 cl, 1 L d'eau, frontale + piles, couverture de survie, sifflet, bande élastique, réserve alimentaire, veste imperméable, pièce d'identité ; kit grand froid possible. Prédiction 10h30-12h00. Premier ultra. Nutrition : 500-700 g glucides, gels + isotonique 5 premières heures puis solide tiède (soupe, riz, fromage, coca), bouillons chauds.
 
 NUTRITION QUOTIDIENNE : 2800-3200 kcal en charge, 2400-2600 en affûtage. 55/25/20. Glucides 5-7 g/kg, protéines 1,6-1,8 g/kg. Post-SL 1,2 g/kg glucides + 0,3 g/kg protéines en 30 min. J-3 : 8-10 g/kg glucides, moins de fibres, 2-3 L eau salée.
 

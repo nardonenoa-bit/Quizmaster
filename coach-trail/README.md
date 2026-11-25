@@ -16,6 +16,7 @@ npx http-server coach-trail
 - **Plan** : S35 à S48, séance par jour avec type, km, D+, FC, allure, note. Mode édition : km et D+ prévus, km et D+ réels, note, case fait, glisser-déposer (flèches sur mobile).
 - **Calendrier** : août à novembre, couleur par type, totaux hebdo planifié / réalisé, courses incluses.
 - **Parcours** : découpage par ravitos ou par dénivelé (montées, descentes, roulant), allures modifiables par tronçon. Profils Sainté-Lyon (trace officielle), UTBV, Drutel, Trail de la Mine, Monteynard. Tronçons, D+ cumulé, stratégie UTBV avec temps cible réglable. Import GPX.
+- **Guide accompagnateurs** (onglet Parcours, Sainté-Lyon) : points accessibles ou interdits, accès et parkings du guide officiel 2026, heure de passage selon ton plan, liens LiveTrail et itinéraire.
 - **Zones & allures** : zones FC, allures, zones Strava, prévisions, calculateur km-effort, Monteynard, nutrition.
 - **Coach IA** : chat Claude avec toutes les données athlète dans le prompt système.
 
