@@ -214,6 +214,9 @@ td.r,th.r{text-align:right}
 .ravrow td{background:#eef4ff;border-bottom:1px solid #dbe6ff;padding:7px 8px}
 .ravline{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center;font-size:13px;color:#1e3a8a}
 .ravline .dot{margin-right:-8px}
+.saved{margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px}
+.savedlist{display:flex;flex-direction:column;margin-top:8px}
+.saveditem{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line2);flex-wrap:wrap}
 .stops{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--line2)}
 .stop{display:flex;flex-direction:column;gap:2px}
 .pace{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--line);border-radius:9px;padding:2px;background:#fff}
@@ -598,19 +601,19 @@ function hideTip(){tipEl.style.opacity=0}
    ÉTAT
    ========================================================= */
 const S = {
-  tab:'dash', planWeek:null, editMode:false, raceId:'saintelyon', utbvTarget:325*60, slTarget:660*60, paces:{}, paceKm:{}, cut:'rav', stops:{R1:2,R2:4,R3:5,R4:4,R5:2}, countStops:true,
+  tab:'dash', planWeek:null, editMode:false, raceId:'saintelyon', utbvTarget:325*60, slTarget:660*60, paces:{}, paceKm:{}, slPlans:[], cut:'rav', stops:{R1:2,R2:4,R3:5,R4:4,R5:2}, countStops:true,
   edits:{}, uploads:{}, activities:null, shoesKm:{}, shoesExtra:[], syncedAt:null, syncSource:'snapshot',
   chat:[], chatBusy:false, strava:{status:'off',msg:''}
 };
 const STORE_KEY='coachtrail:v1';
 async function loadState(){
   const d = await store.get(STORE_KEY);
-  if(d){Object.assign(S,{edits:d.edits||{},uploads:d.uploads||{},activities:d.activities||null,shoesKm:d.shoesKm||{},shoesExtra:d.shoesExtra||[],syncedAt:d.syncedAt||null,syncSource:d.syncSource||'snapshot',utbvTarget:d.utbvTarget||S.utbvTarget,slTarget:d.slTarget||S.slTarget,paces:d.paces||{},paceKm:d.paceKm||{},cut:d.cut||'rav',stops:d.stops||S.stops,countStops:d.countStops!==false,chat:d.chat||[]})}
+  if(d){Object.assign(S,{edits:d.edits||{},uploads:d.uploads||{},activities:d.activities||null,shoesKm:d.shoesKm||{},shoesExtra:d.shoesExtra||[],syncedAt:d.syncedAt||null,syncSource:d.syncSource||'snapshot',utbvTarget:d.utbvTarget||S.utbvTarget,slTarget:d.slTarget||S.slTarget,paces:d.paces||{},paceKm:d.paceKm||{},slPlans:d.slPlans||[],cut:d.cut||'rav',stops:d.stops||S.stops,countStops:d.countStops!==false,chat:d.chat||[]})}
 }
 let saveT=null;
 function save(){clearTimeout(saveT);saveT=setTimeout(()=>{
   let chat=S.chat.slice(-40);
-  const pack=()=>({edits:S.edits,uploads:S.uploads,activities:S.activities,shoesKm:S.shoesKm,shoesExtra:S.shoesExtra,syncedAt:S.syncedAt,syncSource:S.syncSource,utbvTarget:S.utbvTarget,slTarget:S.slTarget,paces:S.paces,paceKm:S.paceKm,cut:S.cut,stops:S.stops,countStops:S.countStops,chat});
+  const pack=()=>({edits:S.edits,uploads:S.uploads,activities:S.activities,shoesKm:S.shoesKm,shoesExtra:S.shoesExtra,syncedAt:S.syncedAt,syncSource:S.syncSource,utbvTarget:S.utbvTarget,slTarget:S.slTarget,paces:S.paces,paceKm:S.paceKm,slPlans:S.slPlans,cut:S.cut,stops:S.stops,countStops:S.countStops,chat});
   /* limite 256 Ko par document : on raccourcit le chat si besoin */
   while(chat.length&&JSON.stringify(pack()).length>230000)chat=chat.slice(2);
   store.set(STORE_KEY,pack());
@@ -1188,6 +1191,7 @@ function renderGpx(){
         <div class="stat"><div class="l">Modèle Monteynard</div><div class="v">${fmtDur(predict(R.km,R.dplus,'monteynard'))}</div></div>
       </div>
       ${paceSummary(key,plan,S.slTarget,new Date(2026,10,28,23,30))}
+      ${savedPlansBlock(plan)}
       <div class="stops">
         <label class="row" style="gap:6px;cursor:pointer"><input type="checkbox" id="countStops" ${S.countStops?'checked':''}> <b class="small">Compter les pauses aux ravitos</b></label>
         ${S.countStops?SL_RAVITOS.map(r=>`<label class="stop small"><span>${r.short} ${esc(r.name.split(' ')[0]==='Saint-Genou'?'Saint-Genou':r.name)}</span><span class="row" style="gap:4px"><input type="number" min="0" max="60" step="1" class="inp num" id="stop-${r.short}" data-stop="${r.short}" value="${(S.stops||{})[r.short]??0}" style="width:64px"> min</span></label>`).join(''):''}
@@ -1315,6 +1319,31 @@ function utbvPlan(target){
   return UTBV_SECTIONS.map((s,i)=>{const km=s.to-s.from;const custom=ov[i]!=null;const sec=custom?ov[i]*km:base[i]*f;cum+=sec;return {...s,i,km,sec,cum,custom,baseTot}});
 }
 /* Cellule d'allure modifiable : − / + 10 s/km ou saisie m:ss */
+/* Plans Sainté-Lyon enregistrés : instantané de tout ce qui règle le plan */
+function slSnapshot(name,plan){
+  const tot=plan[plan.length-1].cum;
+  return {id:Date.now().toString(36),name,savedAt:Date.now(),final:tot,slTarget:S.slTarget,cut:S.cut,
+    paceKm:JSON.parse(JSON.stringify({saintelyon:(S.paceKm||{}).saintelyon||{},'saintelyon-terrain':(S.paceKm||{})['saintelyon-terrain']||{}})),
+    stops:{...S.stops},countStops:S.countStops};
+}
+function savedPlansBlock(plan){
+  const list=S.slPlans||[];const def=`Plan du ${new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})} · ${fmtDur(plan[plan.length-1].cum)}`;
+  return `<div class="saved">
+    <div class="row" style="gap:8px"><b class="small">Mes plans</b>
+      <input class="inp" id="planName" value="${esc(def)}" style="max-width:240px" aria-label="Nom du plan">
+      <button class="btn sm pri" data-act="saveplan">Enregistrer ce plan</button>
+      <button class="btn sm" data-act="copyplan">Copier le plan</button></div>
+    ${list.length?`<div class="savedlist">${list.map(x=>`<div class="saveditem"><div><b>${esc(x.name)}</b><div class="small muted">${new Date(x.savedAt).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})} · arrivée ${fmtDur(x.final)} · ${x.cut==='terrain'?'dénivelé':'ravitos'}${x.countStops?' · pauses comprises':''}</div></div>
+      <span class="sp"></span><button class="btn sm" data-loadplan="${x.id}">Charger</button><button class="btn sm" data-delplan="${x.id}">${S.delArmed===x.id?'Confirmer':'Supprimer'}</button></div>`).join('')}</div>`:'<div class="small muted" style="margin-top:6px">Aucun plan enregistré. Ton plan en cours est sauvegardé automatiquement ; « Enregistrer » en garde une copie que tu peux recharger plus tard.</div>'}
+  </div>`;
+}
+function planText(plan){
+  const tot=plan[plan.length-1].cum;const mov=plan.reduce((a,r)=>a+r.sec,0);
+  const L=[`Sainté-Lyon 2026 · départ 23h30 Saint-Étienne`,`Arrivée prévue : ${fmtDur(tot)} (${clockAt(tot)}) · en mouvement ${fmtDur(mov)} · pauses ${fmtDur(tot-mov)}`,`Découpage : ${S.cut==='terrain'?'dénivelé':'ravitos'}`,''];
+  plan.forEach(r=>{L.push(`km ${fmtKm(r.from,1)}-${fmtKm(r.to,1)} | ${r.type?r.type+' '+(r.grade>0?'+':'')+r.grade.toFixed(1)+' %':r.note} | +${Math.round(r.up)}/-${Math.round(r.down)} | ${fmtPace(r.sec/r.km)}/km | ${fmtDur(r.sec)} | cumul ${fmtDur(r.cum)} (${r.clock})`);
+    if(r.rav)L.push(`  >> ${r.rav.short} ${r.rav.name} : arrivée ${fmtDur(r.cum)} (${r.clock})${r.stop?` · pause ${Math.round(r.stop/60)} min · repart ${fmtDur(r.cum+r.stop)} (${clockAt(r.cum+r.stop)})`:''}${r.rav.cutoff?' · barrière GPX '+r.rav.cutoff:''}`)});
+  L.push('',`Arrivée Lyon : ${fmtDur(tot)} (${clockAt(tot)})`);return L.join('\n');
+}
 /* Colonne Ravito : nom, arrivée, pause, départ, barrière */
 function ravCell(r){
   return `<div class="ravcell"><b>${esc(r.rav.short+' · '+r.rav.name)}</b>
@@ -1786,7 +1815,7 @@ document.addEventListener('change',e=>{const el=e.target;
   el.blur();setPace(race,+i,v)});
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.pacein){e.preventDefault();e.target.dispatchEvent(new Event('change',{bubbles:true}))}});
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-tab],[data-week],[data-goplan],[data-done],[data-act],[data-race],[data-race-go],[data-mv],[data-q],[data-pace],[data-cut]');
+  const t=e.target.closest('[data-tab],[data-week],[data-goplan],[data-done],[data-act],[data-race],[data-race-go],[data-mv],[data-q],[data-pace],[data-cut],[data-loadplan],[data-delplan]');
   if(!t)return;
   if(t.dataset.tab) return go(t.dataset.tab);
   if(t.dataset.week){S.planWeek=+t.dataset.week;return render()}
@@ -1797,6 +1826,17 @@ document.addEventListener('click',e=>{
   if(t.dataset.mv){const [i,d]=t.dataset.mv.split(':').map(Number);return swapSessions(S.planWeek,i,i+d)}
   if(t.dataset.done){const [w,i]=t.dataset.done.split(':').map(Number);const wk=getWeek(w);const s=wk.sessions[i];const E=ensureEdit(w);
     E.days[i]=E.days[i]||{};E.days[i].done=!s.done;save();return render()}
+  const slPlanNow=()=>{const prof=raceProfile('saintelyon');return slPlan(prof,profileGain(prof,RACES.saintelyon),S.slTarget)};
+  const keepScroll=()=>{const y=scrollY;render();scrollTo(0,y)};
+  if(t.dataset.loadplan){const x=(S.slPlans||[]).find(z=>z.id===t.dataset.loadplan);if(!x)return;
+    S.slTarget=x.slTarget;S.cut=x.cut;S.paceKm={...(S.paceKm||{}),...JSON.parse(JSON.stringify(x.paceKm))};S.stops={...x.stops};S.countStops=x.countStops;
+    if(S.paces){delete S.paces.saintelyon;delete S.paces['saintelyon-terrain']}save();keepScroll();toast('Plan chargé : '+x.name);return}
+  if(t.dataset.delplan){const id=t.dataset.delplan;if(S.delArmed!==id){S.delArmed=id;keepScroll();setTimeout(()=>{if(S.delArmed===id){S.delArmed=null;softRender()}},4000);return}
+    S.delArmed=null;S.slPlans=(S.slPlans||[]).filter(z=>z.id!==id);save();keepScroll();toast('Plan supprimé');return}
+  if(t.dataset.act==='saveplan'){const name=($('#planName').value||'').trim()||'Mon plan';S.slPlans=[slSnapshot(name,slPlanNow()),...(S.slPlans||[])].slice(0,20);save();keepScroll();toast('Plan enregistré : '+name);return}
+  if(t.dataset.act==='copyplan'){const txt=planText(slPlanNow());
+    const fallback=()=>{let ta=$('#planTxt');if(!ta){ta=document.createElement('textarea');ta.id='planTxt';ta.className='inp';ta.rows=10;ta.style.marginTop='8px';t.closest('.saved').appendChild(ta)}ta.value=txt;ta.select();toast('Texte sélectionné : copie-le avec Ctrl+C ou un appui long')};
+    try{navigator.clipboard.writeText(txt).then(()=>toast('Plan copié dans le presse-papier'),fallback)}catch(e){fallback()}return}
   if(t.dataset.cut){S.cut=t.dataset.cut;save();const y=scrollY;render();scrollTo(0,y);return}
   if(t.dataset.pace){const [race,i,d]=t.dataset.pace.split(':');const r=currentPlan(race)[+i];if(!r)return;setPace(race,+i,Math.max(150,Math.round(r.sec/r.km)+(+d)));return}
   const a=t.dataset.act;
